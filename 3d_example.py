@@ -30,4 +30,6 @@ ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
 
+print("Git is working now i hope")
+
 plt.show()
