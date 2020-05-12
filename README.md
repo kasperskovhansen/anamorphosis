@@ -1,1 +1,1 @@
-Read me
+Dette er opbevaringsstedet for min studieretningscase.
