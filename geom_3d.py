@@ -64,7 +64,7 @@ class Line():
         Lav en ny linje ud fra to punkter på linjen
         '''
         d = Vector.connect(p1, p2)
-        p0 = Vector(p1.x, p1.y, p1.z)
+        p0 = Vector(p1.x, p1.y, p1.z) # Skulle det ikke have været: p0 = p1
         return cls(p0, d)
 
     def point(self, t: (float,int) = 0) -> Point:
@@ -91,7 +91,8 @@ class Line():
         Returnerer et punkt på linjen, svarende til en given y-værdi
         '''
         #Prøv selv
-        pass
+        t = (y - self.p0.y) / self.d.y
+        return self.point(t)
 
     def __str__(self):
         '''
@@ -126,7 +127,7 @@ def add(v1: Vector, v2: Vector) -> Vector:
     Læg to vektorer sammen og returner resultatet
     '''
     #Prøv selv
-    pass
+    return Vector(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z)
 
 
 def dot(v1: Vector, v2: Vector) -> float:
@@ -134,7 +135,14 @@ def dot(v1: Vector, v2: Vector) -> float:
     Returner prikproduktet mellem v1 og v2
     '''
     #prøv selv
-    pass
+    return v1.x * v2.x + v1.y * v2.y
+
+
+def cross(v1: Vector, v2: Vector) -> Vector:
+    x = v1.y * v2.z - v1.z * v2.y
+    y = v1.x * v2.z - v1.z * v2.x
+    z = v1.x * v2.y - v1.y * v2.x
+    return Vector(x, y, z)
 
 
 
