@@ -27,23 +27,21 @@ class GUI_anamorphosis(ttk.Frame):
     def __init__(self, master=None):
         ttk.Frame.__init__(self, master)
         
-        self.data = Data_anamorphosis()
+        viewPoint = Point(5, 2, 15)
+        plane = [Point(0,0,-2), Point(10,0,-2), Point(10,10,4), Point(0,10,4)]
+
+        self.data = Data_anamorphosis(viewPoint, plane)
 
         # Opsætning af graf.
         self.fig = plt.figure()
-        # self.ax = Axes3D(self.fig)
-        # self.ax.azim = -40
-        # self.ax.elev = 1
         self.shouldAnimate = False
         self.animationInterval = 100
         self.cornerX = 0
         self.ani = None
-
-
+        self.axis = "x-akse"
+ 
         self.build_GUI()
-        # self.reload3DGraph()
 
-        # plt.show()
 
     def on_object_selected(self, val):
         print(val)
@@ -53,8 +51,6 @@ class GUI_anamorphosis(ttk.Frame):
             objType = self.type_var.get()
             objScale = scale.get()
             self.data.addObject(Object.createType(str(objType), objScale, Vector(2,2,2)))
-
-            self.reload3DGraph()
             dlg.destroy()
 
         def cancel():
@@ -121,6 +117,7 @@ class GUI_anamorphosis(ttk.Frame):
 
         canvas = FigureCanvasTkAgg(self.fig, master=dlg)  # A tk.DrawingArea.
         canvas.draw()
+        # Aksen skal opsættes efter canvas, når det embedded i tkinter.
         self.ax = Axes3D(self.fig)
         self.ax.azim = -40
         self.ax.elev = 1
@@ -140,20 +137,36 @@ class GUI_anamorphosis(ttk.Frame):
         print("rotate_clock")
     
     def move_up(self): # pylint: disable=E0202
-        self.cornerX += 1
+        d = None
+        if self.axis == "x-akse":
+            d = Vector(1, 0, 0)
+        elif self.axis == "y-akse":
+            d = Vector(0, 1, 0)
+        elif self.axis == "z-akse":
+            d = Vector(0, 0, 1)
+        self.data.viewPoint.translate(d)
         print("move_up")
         self.reloadGraph()
 
 
     def move_down(self): # pylint: disable=E0202
         print("move_down")
-        self.cornerX -= 1
+
+        d = None
+        if self.axis == "x-akse":
+            d = Vector(-1, 0, 0)
+        elif self.axis == "y-akse":
+            d = Vector(0, -1, 0)
+        elif self.axis == "z-akse":
+            d = Vector(0, 0, -1)
+        self.data.viewPoint.translate(d)
         self.reloadGraph()
 
     def rotate_counter(self): # pylint: disable=E0202
         print("rotate_counter")
 
     def axis_change(self, val): # pylint: disable=E0202
+        self.axis = val
         print(val)
 
 
@@ -208,9 +221,9 @@ class GUI_anamorphosis(ttk.Frame):
         self.btn_move_up = ttk.Button(main_frame, text="Flyt op", command=self.move_up).grid(sticky='nsew',column=5, row=1, rowspan=6)
         ttk.Label(main_frame, text="Vælg akse:", background="white").grid(sticky='ew', column=5, row=8, rowspan=1)
         axes = ["x-akse", "x-akse", "y-akse", "z-akse"]
-        variable = tk.StringVar(main_frame)
-        variable.set(axes[0]) # Standardværdi.
-        self.opt_axes = ttk.OptionMenu(main_frame, variable, command=self.axis_change, *axes).grid(sticky='nsew',column=5, row=10, rowspan=2)
+        axis_var = tk.StringVar(main_frame)
+        axis_var.set(axes[0]) # Standardværdi.
+        self.opt_axes = ttk.OptionMenu(main_frame, axis_var, command=self.axis_change, *axes).grid(sticky='nsew',column=5, row=10, rowspan=2)
         self.btn_move_down = ttk.Button(main_frame, text="Flyt ned", command=self.move_down).grid(sticky='nsew',column=5, row=13, rowspan=12)
         self.btn_rotate_counter = ttk.Button(main_frame, text="Drej mod uret", command=self.rotate_counter).grid(sticky='nsew',column=6, row=1, rowspan=24)
 
@@ -226,18 +239,13 @@ class GUI_anamorphosis(ttk.Frame):
     def update3DGraph(self, i=0):
         self.ax.clear()
         # Plan der agerer gulv
-        pPoints = [Point(self.cornerX,0,-2), Point(10,0,-2), Point(10,10,4), Point(0,10,4)]
-        T = self.pointsToCoords(pPoints)
+        T = self.pointsToCoords(self.data.planeP)
         verts = [list(zip(T[0],T[1],T[2]))]
         # Tilføj plan til tegningen.
         self.ax.add_collection3d(Poly3DCollection(verts, alpha=0.5))
 
-        # Matematisk repræsentation af planen.
-        plane = Plane.createFromThreePoints(pPoints[0], pPoints[1], pPoints[2])
-
         # Punkt hvorfra iagttageren observerer.
-        viewPoint = Point(5,0,12)
-        self.ax.scatter(viewPoint.x, viewPoint.y, viewPoint.z, color='green')
+        self.ax.scatter(self.data.viewPoint.x, self.data.viewPoint.y, self.data.viewPoint.z, color='green')
 
 
         # Punkter i 3D figuren, der senere skal vises som anamorfose.
@@ -255,7 +263,7 @@ class GUI_anamorphosis(ttk.Frame):
 
 
         # Linjer mellem viewPoint og figPoints.
-        lines = self.getLines(figPoints, Vector.fromPoint(viewPoint))
+        lines = self.getLines(figPoints, Vector.fromPoint(self.data.viewPoint))
         coordsList = self.linesToCoords(lines)
 
         for line in coordsList:
@@ -264,7 +272,7 @@ class GUI_anamorphosis(ttk.Frame):
         # Lister over punkter projiceret på planen.
         pointsOnPlane = []
         for line in lines:
-            intersectionPoint = intersection(plane, line)
+            intersectionPoint = intersection(self.data.plane, line)
             if intersectionPoint:
                 pointsOnPlane.append(intersectionPoint)
             else:
