@@ -39,6 +39,9 @@ class GUI_anamorphosis(ttk.Frame):
         self.cornerX = 0
         self.ani = None
         self.axis = "x-akse"
+
+        # Lav en kasse.
+        self.data.addObject(Object.createType("Kasse", 1, Vector(4,4,4)))
  
         self.build_GUI()
 
@@ -144,7 +147,7 @@ class GUI_anamorphosis(ttk.Frame):
             d = Vector(0, 1, 0)
         elif self.axis == "z-akse":
             d = Vector(0, 0, 1)
-        self.data.viewPoint.translate(d)
+        self.data.objects[0].translate(d)
         print("move_up")
         self.reloadGraph()
 
@@ -159,7 +162,7 @@ class GUI_anamorphosis(ttk.Frame):
             d = Vector(0, -1, 0)
         elif self.axis == "z-akse":
             d = Vector(0, 0, -1)
-        self.data.viewPoint.translate(d)
+        self.data.objects[0].translate(d)
         self.reloadGraph()
 
     def rotate_counter(self): # pylint: disable=E0202
@@ -247,39 +250,32 @@ class GUI_anamorphosis(ttk.Frame):
         # Punkt hvorfra iagttageren observerer.
         self.ax.scatter(self.data.viewPoint.x, self.data.viewPoint.y, self.data.viewPoint.z, color='green')
 
+        for obj in self.data.objects:
+            figPoints = obj.points
 
-        # Punkter i 3D figuren, der senere skal vises som anamorfose.
-        # Box pos
-        bpX = 4
-        bpY = 4
-        bpZ = 4
-        # Box width
-        bW = 2
-        figPoints = [Point(bpX, bpY, bpZ), Point(bpX + bW, bpY, bpZ), Point(bpX + bW, bpY + bW, bpZ), Point(bpX, bpY + bW, bpZ), Point(bpX, bpY, bpZ + bW), Point(bpX + bW, bpY, bpZ + bW), Point(bpX + bW, bpY + bW, bpZ + bW), Point(bpX, bpY + bW, bpZ + bW)]
-
-        T = self.pointsToCoords(figPoints)
-        # Tilføj alle punkterne til tegningen.
-        self.ax.scatter(T[0], T[1], T[2], color='red')
+            T = self.pointsToCoords(figPoints)
+            # Tilføj alle punkterne til tegningen.
+            self.ax.scatter(T[0], T[1], T[2], color='red')
 
 
-        # Linjer mellem viewPoint og figPoints.
-        lines = self.getLines(figPoints, Vector.fromPoint(self.data.viewPoint))
-        coordsList = self.linesToCoords(lines)
+            # Linjer mellem viewPoint og figPoints.
+            lines = self.getLines(figPoints, Vector.fromPoint(self.data.viewPoint))
+            coordsList = self.linesToCoords(lines)
 
-        for line in coordsList:
-            self.ax.plot(line[0], line[1], line[2], color='blue', linestyle=':')
+            for line in coordsList:
+                self.ax.plot(line[0], line[1], line[2], color='blue', linestyle=':')
 
-        # Lister over punkter projiceret på planen.
-        pointsOnPlane = []
-        for line in lines:
-            intersectionPoint = intersection(self.data.plane, line)
-            if intersectionPoint:
-                pointsOnPlane.append(intersectionPoint)
-            else:
-                print("Line is parallel")
+            # Lister over punkter projiceret på planen.
+            pointsOnPlane = []
+            for line in lines:
+                intersectionPoint = intersection(self.data.plane, line)
+                if intersectionPoint:
+                    pointsOnPlane.append(intersectionPoint)
+                else:
+                    print("Line is parallel")
 
-        T = self.pointsToCoords(pointsOnPlane)
-        self.ax.scatter(T[0], T[1], T[2], color='blue')
+            T = self.pointsToCoords(pointsOnPlane)
+            self.ax.scatter(T[0], T[1], T[2], color='blue')
 
         self.ani.event_source.stop()
 

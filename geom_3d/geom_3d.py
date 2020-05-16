@@ -141,7 +141,7 @@ class Plane():
 
 
 class Object():
-    def __init__(self, points, deleteable=True):
+    def __init__(self, points: list, deleteable=True):
         self.points = points
         self.centerPoint = None
         self.xVec = None
@@ -154,10 +154,24 @@ class Object():
     @classmethod
     def createType(cls, type: str, scale: float, v0: Vector):
         if type == "Kasse":
-            cls([Point(1,1,1)])
+            # Box pos
+            bpX = v0.x
+            bpY = v0.y
+            bpZ = v0.z
+            # Box width
+            bW = scale
+            figPoints = [Point(bpX, bpY, bpZ), Point(bpX + bW, bpY, bpZ), Point(bpX + bW, bpY + bW, bpZ), Point(bpX, bpY + bW, bpZ), Point(bpX, bpY, bpZ + bW), Point(bpX + bW, bpY, bpZ + bW), Point(bpX + bW, bpY + bW, bpZ + bW), Point(bpX, bpY + bW, bpZ + bW)]
+            return cls(figPoints)
 
         elif type == "Observationspunkt":
             cls([Point(10,10,10)], deleteable=False)
+
+
+    def __str__(self):
+        '''
+        Her defineres hvordan linjen skal printes til konsollen
+        '''
+        return "{}".format(self.points)
 
 
     def findCenterPoint(self):
@@ -184,7 +198,7 @@ class Object():
         '''
         Translater figuren med vektoren d.
         '''
-        self.centerPoint.translate(d)
+        # self.centerPoint.translate(d)
         for point in self.points:
             point.translate(d)
     
