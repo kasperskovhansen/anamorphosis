@@ -9,6 +9,11 @@ class Point():
     def coords(self):
         return [self.x, self.y, self.z]
 
+    def translate(self, d):
+        self.x += d.x
+        self.y += d.y
+        self.z += d.z
+
     def __str__(self):
         '''
         Her defineres hvordan et punkt skal printes til konsollen
@@ -24,7 +29,7 @@ class Vector(Point):
         '''
         Returnerer en forbindende vektor mellem to punkter
         '''
-        return cls(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z)
+        return cls(p2.x - (p1.x), p2.y - (p1.y), p2.z - (p1.z))
 
     @classmethod
     def fromPoint(cls, p: Point):
@@ -128,17 +133,87 @@ class Plane():
     def createFromThreePoints(cls, p1, p2, p3):
         d1 = Vector.connect(p1, p2)
         d2 = Vector.connect(p1, p3)
-        return cls(p1, d1, d2)
+        return cls(p3, d1, d2)
 
     @classmethod
     def createFromPointNormal(cls, p1, n):
         pass
 
 
+class Object():
+    def __init__(self, points, deleteable=True):
+        self.points = points
+        self.centerPoint = None
+        self.xVec = None
+        self.yVec = None
+        self.zVec = None
+        self.deleteable = True
+        self.findCenterPoint()
+        self.findAxisVectors()
+
+    @classmethod
+    def createType(cls, type: str, scale: float, v0: Vector):
+        if type == "Kasse":
+            cls([Point(1,1,1)])
+
+        elif type == "Observationspunkt":
+            cls([Point(10,10,10)], deleteable=False)
+
+
+    def findCenterPoint(self):
+        '''
+        Bestem punktet, som figuren drejer om.
+        '''
+        self.centerPoint = None
+
+    def findAxisVectors(self):
+        '''
+        Bestem objektets lokale akser om hvilke objektet senere drejer.
+        '''
+        self.xVec = None
+        self.yVec = None
+        self.zVec = None
+    
+    def rotate(self, axis: str, degrees: float):
+        '''
+        Drej figuren om centerPoint og den givne akse med et bestemt antal grader.
+        '''
+        pass
+
+    def translate(self, d: Vector):
+        '''
+        Translater figuren med vektoren d.
+        '''
+        self.centerPoint.translate(d)
+        for point in self.points:
+            point.translate(d)
+    
+
 def intersection(pl, l):
-    #Skæringspunkt mellem plan og linje
-    plZ = pl.p0.z
-    return l.getZPoint(plZ)
+    '''
+    Skæringspunkt mellem plan og linje.
+    '''
+    # Normalvektoren til planen pl.
+    planN = cross(pl.d1, pl.d2)
+
+    # Tjek om linjen er parallel med 
+    if dot(planN, l.d) == 0:
+        # Linjen og planen er parallelle.
+        if planN.x * (l.p0.x - pl.p0.x) + planN.y * (l.p0.y - pl.p0.y) + planN.z * (l.p0.z - pl.p0.z) == 0:
+            # Linjen ligger i planen.
+            return False
+
+    planEqB = planN.x * pl.p0.x + planN.y * pl.p0.y + planN.z * pl.p0.z
+
+    t = -(planN.x * l.p0.x + planN.y * l.p0.y + planN.z * l.p0.z - planEqB) / (planN.x * l.d.x + planN.y * l.d.y + planN.z * l.d.z)
+    
+    x = l.p0.x + t * l.d.x
+    y = l.p0.y + t * l.d.y
+    z = l.p0.z + t * l.d.z
+
+    intersection = Point(x, y, z)
+    return intersection
+
 
 def distancePointPlane(p0, pl):
     # afstand fra punkt til plan
@@ -177,7 +252,7 @@ def dot(v1: Vector, v2: Vector) -> float:
 
 def cross(v1: Vector, v2: Vector) -> Vector:
     x = v1.y * v2.z - v1.z * v2.y
-    y = v1.x * v2.z - v1.z * v2.x
+    y = v1.z * v2.x - v1.x * v2.z
     z = v1.x * v2.y - v1.y * v2.x
     return Vector(x, y, z)
 

@@ -15,13 +15,18 @@ initialTime = datetime.now()
 # Opsætning
 fig = plt.figure()
 ax = Axes3D(fig)
-ax.azim = 40
+ax.azim = -40
 ax.elev = 1
+
+ax.set_xlim(0, 15)
+ax.set_ylim(0, 15)
+ax.set_zlim(0, 15)
+
 
 figPoints = []
 
-shouldAnimate = False
-animationInterval = 1000
+shouldAnimate = True
+animationInterval = 100
 
 def pointsToCoords(l: list) -> list:
     # Transponer listen med koordinatsæt, så vi får tre lister med henholdsvis x, y, og z.
@@ -44,29 +49,28 @@ def getLines(figPoints: list, viewPoint: Point):
     return lineList
 
 
-def animate(i):
+def reloadChart(i):
     ax.clear()
     # Plan der agerer gulv
-    pPoints = [Point(0,0,0), Point(10,0,0), Point(10,10,0), Point(0,10,0)]
+    pPoints = [Point(0,0,-2-i*1), Point(10,0,-2-i*1), Point(10,10,4), Point(0,10,4)]
     T = pointsToCoords(pPoints)
     verts = [list(zip(T[0],T[1],T[2]))]
     # Tilføj plan til tegningen.
     ax.add_collection3d(Poly3DCollection(verts, alpha=0.5))
 
     # Matematisk repræsentation af planen.
-    plane = Plane(pPoints[0], pPoints[1], pPoints[2])
-
+    plane = Plane.createFromThreePoints(pPoints[0], pPoints[1], pPoints[2])
 
     # Punkt hvorfra iagttageren observerer.
-    viewPoint = Point(0.5,0,8)
+    viewPoint = Point(5,0,12)
     ax.scatter(viewPoint.x, viewPoint.y, viewPoint.z, color='green')
 
 
     # Punkter i 3D figuren, der senere skal vises som anamorfose.
     # Box pos
-    bpX = 4 + 0.1 * i
+    bpX = 4
     bpY = 4
-    bpZ = 0.5
+    bpZ = 4
     # Box width
     bW = 2
     figPoints = [Point(bpX, bpY, bpZ), Point(bpX + bW, bpY, bpZ), Point(bpX + bW, bpY + bW, bpZ), Point(bpX, bpY + bW, bpZ), Point(bpX, bpY, bpZ + bW), Point(bpX + bW, bpY, bpZ + bW), Point(bpX + bW, bpY + bW, bpZ + bW), Point(bpX, bpY + bW, bpZ + bW)]
@@ -86,16 +90,20 @@ def animate(i):
     # Lister over punkter projiceret på planen.
     pointsOnPlane = []
     for line in lines:
-        pointsOnPlane.append(intersection(plane, line))
+        intersectionPoint = intersection(plane, line)
+        if intersectionPoint:
+            pointsOnPlane.append(intersectionPoint)
+        else:
+            print("Line is parallel")
 
     T = pointsToCoords(pointsOnPlane)
     ax.scatter(T[0], T[1], T[2], color='blue')
 
 
 if shouldAnimate:  
-    ani = animation.FuncAnimation(fig, animate, interval=animationInterval)
+    ani = animation.FuncAnimation(fig, reloadChart, interval=animationInterval)
 else:
-    animate(0)
+    reloadChart(0)
 
 
 endTime = datetime.now()
