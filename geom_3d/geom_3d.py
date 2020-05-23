@@ -3,10 +3,12 @@ import uuid
 import numpy as np
 
 class Point():
-    def __init__(self, x: (float,int), y: (float,int), z: (float,int)):
+    def __init__(self, x: (float,int), y: (float,int), z: (float,int), color="black", alpha=1):
         self.x = x
         self.y = y
         self.z = z
+        self.color = color
+        self.alpha = alpha
 
     def coords(self):
         return [self.x, self.y, self.z]
@@ -130,11 +132,38 @@ class Line():
         return self.point(t)
 
     def getPointT(self, p: Point):
-        print(self)
-        print(p)
-        t = (p.x - self.p0.x) / self.d.x
-        print(t)
-        print("t * self.d.y + self.p0.y == p.y  ->  {} == {}".format(t * self.d.y + self.p0.y,p.y))
+        # print(self)
+        # print(p)
+        
+        if not self.d.x == 0:
+            t = (p.x - self.p0.x) / self.d.x
+            if not self.d.y == 0:
+                if plusMinus(t * self.d.y + self.p0.y, p.y):
+                    return t
+            elif not self.d.z == 0:
+                if plusMinus(t * self.d.z + self.p0.z, p.z):
+                    return t
+        if not self.d.y == 0:
+            t = (p.y - self.p0.y) / self.d.y
+            if not self.d.x == 0:
+                if plusMinus(t * self.d.x + self.p0.x, p.x):
+                    return t
+            elif not self.d.z == 0:
+                if plusMinus(t * self.d.z + self.p0.z, p.z):
+                    return t
+        if not self.d.z == 0:
+            t = (p.z - self.p0.z) / self.d.z
+            if not self.d.y == 0:
+                if plusMinus(t * self.d.y + self.p0.y, p.y):
+                    return t
+            elif not self.d.x == 0:
+                if plusMinus(t * self.d.x + self.p0.x, p.x):
+                    return t
+
+        return None
+        
+        # print(t)
+        # print("t * self.d.y + self.p0.y == p.y  ->  {} == {}".format(t * self.d.y + self.p0.y,p.y))
         if plusMinus(t * self.d.y + self.p0.y, p.y):
             print(t)
             return t
@@ -149,18 +178,22 @@ class Line():
 
 
 class Segment():
-    def __init__(self, v1: Vector, v2: Vector):
+    def __init__(self, v1: Vector, v2: Vector, color="black", alpha=1):
         self.v1 = v1
         self.v2 = v2
+        self.color = color
+        self.alpha = alpha
 
     def __str__(self):
         return "({}, {}, {}), ({}, {}, {})".format(self.v1.x, self.v1.y, self.v1.z, self.v2.x, self.v2.y, self.v2.z)
 
 class Plane():
-    def __init__(self, p0: Point, d1: Vector, d2: Vector):
+    def __init__(self, p0: Point, d1: Vector, d2: Vector, color="blue", alpha=0.5):
         self.p0 = p0
         self.d1 = d1
         self.d2 = d2
+        self.color = color
+        self.alpha = alpha
     
     @classmethod
     def createFromThreePoints(cls, p1: Point, p2: Point, p3: Point):
@@ -186,36 +219,29 @@ class Object():
         self.yAng = 0
         self.zAng = 0
         self.centerPoint = self.calcCenterPoint()
-        
+        self.visible = True
+        self.anamorphosis_visible = True
+                
         self.scale=scale
         self.deleteable = deleteable        
         self.mathPlane = mathPlane        
     @classmethod
     def createType(cls, objType: str, scale: float, v0: Vector, name: str = "", deleteable: bool = True):
-        if objType == "Kasse":
-            # Box pos
-            bpX = v0.x
-            bpY = v0.y
-            bpZ = v0.z
-            # Box width
-            bW = scale
-            # Figur punkter.
-            # fp = [Vector(bpX, bpY, bpZ), Vector(bpX + bW, bpY, bpZ), Vector(bpX + bW, bpY + bW, bpZ), Vector(bpX, bpY + bW, bpZ), Vector(bpX, bpY, bpZ + bW), Vector(bpX + bW, bpY, bpZ + bW), Vector(bpX + bW, bpY + bW, bpZ + bW), Vector(bpX, bpY + bW, bpZ + bW)]
-            # segments = [Segment(fp[0],fp[1]), Segment(fp[0],fp[3]), Segment(fp[0],fp[4]), Segment(fp[1],fp[2]), Segment(fp[1],fp[5]), Segment(fp[2],fp[3]), Segment(fp[2],fp[6]), Segment(fp[3],fp[7]), Segment(fp[4],fp[5]), Segment(fp[5],fp[6]), Segment(fp[6],fp[7]), Segment(fp[4],fp[7])]
-            fp = [Vector(bpX + bW, bpY, bpZ + bW), Vector(bpX + bW, bpY + bW, bpZ + bW)]
-            segments = [Segment(fp[0], fp[1])]
-            return cls(fp, segments=segments, objType=objType, name = name, scale=scale, startVec=v0)
+        if objType == "Kasse":            
+            fpSegments = buildFpSegments(v0, scale, objType)
+            return cls(fpSegments[0], segments=fpSegments[1], objType=objType, name = name, scale=scale, startVec=v0)
+
+        if objType == "K":            
+            fpSegments = buildFpSegments(v0, scale, objType)
+            return cls(fpSegments[0], segments=fpSegments[1], objType=objType, name = name, scale=scale, startVec=v0)
 
         elif objType == "Observationspunkt":
             return cls([Vector(v0.x,v0.y,v0.z)], deleteable=deleteable, objType=objType, name = name, scale=scale, startVec=v0)
         
         elif objType == "Plan":
             # Figur punkter.
-            fp = [Vector(v0.x, v0.y, v0.z), Vector(v0.x + scale, v0.y, v0.z), Vector(v0.x + scale, v0.y + scale, v0.z), Vector(v0.x, v0.y + scale, v0.z)]
-            segments = [Segment(fp[0], fp[1]), Segment(fp[1], fp[2]), Segment(fp[2], fp[3]), Segment(fp[0], fp[3])]
-            # Matematisk repræsentation af planen.
-            mathPlane = Plane.createFromThreePoints(fp[0], fp[1], fp[2])
-            return cls(fp, segments=segments, deleteable=deleteable, objType=objType, name = name, scale=scale, mathPlane=mathPlane, startVec=v0)
+            fpSegments = buildFpSegments(v0, scale, objType)
+            return cls(fpSegments[0], segments=fpSegments[1], deleteable=deleteable, objType=objType, name = name, scale=scale, mathPlane=fpSegments[2], startVec=v0)
         
         elif objType == "Icosahedron":
             h = 0.5*(1+np.sqrt(5))
@@ -269,10 +295,22 @@ class Object():
             point.z = vec[2]
             point.add(self.centerPoint)
 
-        print(self.objType)
         if self.objType == "Plan":
             print("Plan")
             self.mathPlane = Plane.createFromThreePoints(self.points[0], self.points[1], self.points[2])
+
+    def setScale(self, scale):
+        oldCenter = self.centerPoint
+        # for point in self.points:
+        #     point.subtract(self.points[0])
+        self.scale = scale
+        fpSegments = buildFpSegments(self.startVec, self.scale, self.objType)
+        self.points = fpSegments[0]
+        self.segments = fpSegments[1]
+        self.centerPoint = self.calcCenterPoint()
+        for point in self.points:
+            point.add(subtract(oldCenter, self.centerPoint))
+
 
     def __str__(self):
         '''
@@ -295,18 +333,122 @@ class Object():
             point.translate(d)
         self.centerPoint.translate(d)    
 
+def buildFpSegments(v0, scale, objType):
+    scale = float(scale)
+    mathPlane = None
+
+    if objType == "Kasse":       
+        fp = [Vector(v0.x, v0.y, v0.z), Vector(v0.x + scale, v0.y, v0.z), Vector(v0.x + scale, v0.y + scale, v0.z), Vector(v0.x, v0.y + scale, v0.z), Vector(v0.x, v0.y, v0.z + scale), Vector(v0.x + scale, v0.y, v0.z + scale), Vector(v0.x + scale, v0.y + scale, v0.z + scale), Vector(v0.x, v0.y + scale, v0.z + scale)]
+        segments = [Segment(fp[0],fp[1]), Segment(fp[0],fp[3]), Segment(fp[0],fp[4]), Segment(fp[1],fp[2]), Segment(fp[1],fp[5]), Segment(fp[2],fp[3]), Segment(fp[2],fp[6]), Segment(fp[3],fp[7]), Segment(fp[4],fp[5]), Segment(fp[5],fp[6]), Segment(fp[6],fp[7]), Segment(fp[4],fp[7])]
+    elif objType == "K":
+        scale = scale / 6
+        fp = [Vector(v0.x, v0.y, v0.z), Vector(v0.x + 4*scale, v0.y, v0.z), Vector(v0.x + 4*scale, v0.y, v0.z + 6*scale), Vector(v0.x + 8 * scale, v0.y, v0.z), Vector(v0.x + 13 * scale, v0.y, v0.z), Vector(v0.x + 8 * scale, v0.y, v0.z + 8*scale), Vector(v0.x + 13 * scale, v0.y, v0.z + 16 * scale), Vector(v0.x + 8 * scale, v0.y, v0.z + 16 * scale), Vector(v0.x + 4*scale, v0.y, v0.z + 10*scale), Vector(v0.x + 4*scale, v0.y, v0.z + 16 * scale), Vector(v0.x, v0.y, v0.z + 16 * scale), Vector(v0.x, v0.y + 4 * scale, v0.z + 16 * scale),     Vector(v0.x, v0.y + 4 * scale, v0.z), Vector(v0.x + 4*scale, v0.y + 4 * scale, v0.z), Vector(v0.x + 4*scale, v0.y + 4 * scale, v0.z + 6*scale), Vector(v0.x + 8 * scale, v0.y + 4 * scale, v0.z), Vector(v0.x + 13 * scale, v0.y + 4 * scale, v0.z), Vector(v0.x + 8 * scale, v0.y + 4 * scale, v0.z + 8*scale), Vector(v0.x + 13 * scale, v0.y + 4 * scale, v0.z + 16 * scale), Vector(v0.x + 8 * scale, v0.y + 4 * scale, v0.z + 16 * scale), Vector(v0.x + 4*scale, v0.y + 4 * scale, v0.z + 10*scale), Vector(v0.x + 4*scale, v0.y + 4 * scale, v0.z + 16 * scale)]
+        segments = []
+        for i in range(10):
+            segments.append(Segment(fp[i], fp[i + 12], color="grey"))       
+        segments.append(Segment(fp[10], fp[11], color="grey"))            
+        for i in range(len(fp)):                
+            if i >= 11 and i < len(fp) -1:
+                segments.append(Segment(fp[i], fp[i + 1], color="green"))
+            segments.append(Segment(fp[11], fp[21], color="green"))
+            if i >= 0 and i < 10:
+                segments.append(Segment(fp[i], fp[i + 1], color="red"))            
+            segments.append(Segment(fp[10], fp[0], color="red"))
+    elif objType == "Plan":
+        fp = [Vector(v0.x, v0.y, v0.z), Vector(v0.x + scale, v0.y, v0.z), Vector(v0.x + scale, v0.y + scale, v0.z), Vector(v0.x, v0.y + scale, v0.z)]
+        segments = [Segment(fp[0], fp[1]), Segment(fp[1], fp[2]), Segment(fp[2], fp[3]), Segment(fp[0], fp[3])]
+        # Matematisk repræsentation af planen.
+        mathPlane = Plane.createFromThreePoints(fp[0], fp[1], fp[2])
+
+    return [fp, segments, mathPlane]
+
 def lineLineIntersection(l1: Line, l2: Line):
+    
+    xNull = False
+    yNull = False
+    zNull = False
+
+    if plusMinus(l1.d.x, 0) and plusMinus(l2.d.x, 0):
+        xNull = True
+
+    if plusMinus(l1.d.y, 0) and plusMinus(l2.d.y, 0):
+        yNull = True
+
+    if plusMinus(l1.d.z, 0) and plusMinus(l2.d.z, 0):
+        zNull = True
+    
+    # print([xNull, yNull, zNull])
+    
+
+    if xNull and not yNull and not zNull:
+        # Isoler x
+        # return lineLineIntersectionCalc(l1, l2, solveFor="x")
+
+        intersection = lineLineIntersectionCalc(l2, l1, solveFor="x")
+        # print("Intersection: {}".format(intersection))
+        if not intersection:        
+            intersection2 = lineLineIntersectionCalc(l1, l2, solveFor="x")
+            # print("Intersection2: {}".format(intersection2))
+            if intersection2:
+                return intersection2       
+            # print("All failed... Returning None")
+    
+        return intersection
+
+    elif not xNull and yNull and not zNull:
+        # Isoler y
+        intersection = lineLineIntersectionCalc(l2, l1, solveFor="y")
+        # print("Intersection: {}".format(intersection))
+        if not intersection:        
+            intersection2 = lineLineIntersectionCalc(l1, l2, solveFor="y")
+            # print("Intersection2: {}".format(intersection2))
+            if intersection2:
+                return intersection2       
+            # print("All failed... Returning None")
+    
+        return intersection
+
+    elif not xNull and not yNull and zNull:
+        # Isoler z
+        intersection = lineLineIntersectionCalc(l2, l1, solveFor="z")
+        # print("Intersection: {}".format(intersection))
+        if not intersection:        
+            intersection2 = lineLineIntersectionCalc(l1, l2, solveFor="z")
+            # print("Intersection2: {}".format(intersection2))
+            if intersection2:
+                return intersection2       
+            # print("All failed... Returning None")
+    
+        return intersection
+    
+    elif not xNull and not yNull and not zNull:
+        intersection = lineLineIntersectionCalc(l2, l1, solveFor="all")
+        # print("Intersection: {}".format(intersection))
+        if not intersection:        
+            intersection2 = lineLineIntersectionCalc(l1, l2, solveFor="all")
+            # print("Intersection2: {}".format(intersection2))
+            if intersection2:
+                return intersection2       
+            # print("All failed... Returning None")
+    
+        return intersection
+
+    else:
+        return None
+    
+
     intersection = lineLineIntersectionCalc(l2, l1)
-    print("Intersection: {}".format(intersection))
-    if not intersection:
-        print("Intersection: {}".format(intersection))
+    # print("Intersection: {}".format(intersection))
+    if not intersection:        
         intersection2 = lineLineIntersectionCalc(l1, l2)
-        print("Intersection2: {}".format(intersection2))
+        # print("Intersection2: {}".format(intersection2))
         if intersection2:
-            return intersection2        
+            return intersection2       
+        # print("All failed... Returning None")
+ 
     return intersection
     
-def lineLineIntersectionCalc(l1: Line, l2: Line):
+def lineLineIntersectionCalc(l1: Line, l2: Line, solveFor="all"):
     '''
     Skæringspunkt mellem to linjer i rummet.
     '''
@@ -325,7 +467,7 @@ def lineLineIntersectionCalc(l1: Line, l2: Line):
     # y = l2.p0.y + t * l2.d.y
     # z = l2.p0.z + t * l2.d.z
 
-
+    # z
     # Sat sammen
 
     # x:
@@ -338,27 +480,146 @@ def lineLineIntersectionCalc(l1: Line, l2: Line):
     # l1.p0.y + s * l1.d.y = l2.p0.y + t * l2.d.y
 
     # Substitueret:
-    print("l2.d.y * l1.d.x - l2.d.x * l1.d.y == 0  ->  {} == {}".format(l2.d.y * l1.d.x - l2.d.x * l1.d.y, 0))
-    if l2.d.y * l1.d.x - l2.d.x * l1.d.y == 0:
-        print("{} == {}".format(l2.d.y * l1.d.x - l2.d.x * l1.d.y, 0))
-        return None
-    t = (l1.d.x * (l1.p0.y - l2.p0.y) - l1.p0.x * l1.d.y + l2.p0.x * l1.d.y) / (l2.d.y * l1.d.x - l2.d.x * l1.d.y)
 
-    # Indsæt dette i ligningen for x:
-    print("l1.d.x == 0  ->  {} == {}".format(l1.d.x, 0))
-    if l1.d.x == 0:
-        print("{} == {}".format(l1.d.x, 0))
-        return None
-    s = (l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x
+    # l1.p0.y + ((l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x) * l1.d.y = l2.p0.y + t * l2.d.y
 
-    # Tjek om ligningen for z går op, hvis man substituerer de to:
+    # (l2.p0.x * l1.d.y + t * l2.d.x * l1.d.y - l1.p0.x * l1.d.y) / l1.d.x = l2.p0.y + t * l2.d.y - l1.p0.y
+
+    # l2.p0.x * l1.d.y + t * l2.d.x * l1.d.y - l1.p0.x * l1.d.y = l2.p0.y * l1.d.x + t * l2.d.y * l1.d.x - l1.p0.y * l1.d.x
+
+    # l2.p0.x * l1.d.y - l1.p0.x * l1.d.y - l2.p0.y * l1.d.x + l1.p0.y * l1.d.x = t * l2.d.y * l1.d.x - t * l2.d.x * l1.d.y
+
+    # l2.p0.x * l1.d.y - l1.p0.x * l1.d.y - l2.p0.y * l1.d.x + l1.p0.y * l1.d.x = t * (l2.d.y * l1.d.x - l2.d.x * l1.d.y)
+
+    # t = (l2.p0.x * l1.d.y - l1.p0.x * l1.d.y - l2.p0.y * l1.d.x + l1.p0.y * l1.d.x) / (l2.d.y * l1.d.x - l2.d.x * l1.d.y)
+
+    # Sæt t tilbage i ligningen for s:
+
+    # s = (l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x
+
+
+
+    # x
+    # Sat sammen
+
+    # y:
+    # l1.p0.y + s * l1.d.y = l2.p0.y + t * l2.d.y
+
+    # s = (l2.p0.y + t * l2.d.y - l1.p0.y) / l1.d.y
+
+    # Substituer s i ligningen for y:
     # z:
     # l1.p0.z + s * l1.d.z = l2.p0.z + t * l2.d.z
 
-    print("l1.p0.z + s * l1.d.z == l2.p0.z + t * l2.d.z  ->  {} == {}".format(l1.p0.z + s * l1.d.z, l2.p0.z + t * l2.d.z))
-    if plusMinus(l1.p0.z + s * l1.d.z, l2.p0.z + t * l2.d.z):
-        return Point(l1.p0.x + s * l1.d.x, l1.p0.y + s * l1.d.y, l1.p0.z + s * l1.d.z)
+    # Substitueret:
+
+    # l1.p0.z + ((l2.p0.y + t * l2.d.y - l1.p0.y) / l1.d.y) * l1.d.z = l2.p0.z + t * l2.d.z
+
+    # (l2.p0.y * l1.d.z + t * l2.d.y * l1.d.z - l1.p0.y * l1.d.z) / l1.d.y = l2.p0.z + t * l2.d.z - l1.p0.z
+
+    # l2.p0.y * l1.d.z + t * l2.d.y * l1.d.z - l1.p0.y * l1.d.z = l2.p0.z * l1.d.y + t * l2.d.z * l1.d.y - l1.p0.z * l1.d.y
+
+    # l2.p0.y * l1.d.z - l1.p0.y * l1.d.z - l2.p0.z * l1.d.y + l1.p0.z * l1.d.y = t * l2.d.z * l1.d.y - t * l2.d.y * l1.d.z
+
+    # l2.p0.y * l1.d.z - l1.p0.y * l1.d.z - l2.p0.z * l1.d.y + l1.p0.z * l1.d.y = t * (l2.d.z * l1.d.y - l2.d.y * l1.d.z)
+
+    # t = (l2.p0.y * l1.d.z - l1.p0.y * l1.d.z - l2.p0.z * l1.d.y + l1.p0.z * l1.d.y) / (l2.d.z * l1.d.y - l2.d.y * l1.d.z)
+
+    # Sæt t tilbage i ligningen for s:
+
+    # s = (l2.p0.y + t * l2.d.y - l1.p0.y) / l1.d.y
+
+
+    # y
+    # Sat sammen
+
+    # x:
+    # l1.p0.x + s * l1.d.x = l2.p0.x + t * l2.d.x
+
+    # s = (l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x
+
+    # Substituer s i ligningen for y:
+    # z:
+    # l1.p0.z + s * l1.d.z = l2.p0.z + t * l2.d.z
+
+    # Substitueret:
+
+    # l1.p0.z + ((l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x) * l1.d.z = l2.p0.z + t * l2.d.z
+
+    # ((l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x) * l1.d.z = l2.p0.z + t * l2.d.z - l1.p0.z
+
+    # l2.p0.x * l1.d.z + t * l2.d.x * l1.d.z - l1.p0.x * l1.d.z = l2.p0.z * l1.d.x + t * l2.d.z * l1.d.x - l1.p0.z * l1.d.x
+
+    # l2.p0.x * l1.d.z - l1.p0.x * l1.d.z + l1.p0.z * l1.d.x - l2.p0.z * l1.d.x = t * l2.d.z * l1.d.x - t * l2.d.x * l1.d.z
+
+    # t = (l2.p0.x * l1.d.z - l1.p0.x * l1.d.z + l1.p0.z * l1.d.x - l2.p0.z * l1.d.x) / (l2.d.z * l1.d.x - l2.d.x * l1.d.z)
+    
+    # Sæt t tilbage i ligningen for s:
+
+    # s = (l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x
+
+    
+    
+    
+    if solveFor == "z" or solveFor == "all":
+        # print("Solve for z")
+        if not plusMinus(l2.d.y * l1.d.x - l2.d.x * l1.d.y, 0) and not plusMinus(l1.d.x, 0):
+            t = (l2.p0.x * l1.d.y - l1.p0.x * l1.d.y - l2.p0.y * l1.d.x + l1.p0.y * l1.d.x) / (l2.d.y * l1.d.x - l2.d.x * l1.d.y)
+            s = (l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x
+            
+            # print("before plusminus z")
+            if plusMinus(l1.p0.z + s * l1.d.z, l2.p0.z + t * l2.d.z):
+                # print("after plusminus success z")
+                return Point(l1.p0.x + s * l1.d.x, l1.p0.y + s * l1.d.y, l1.p0.z + s * l1.d.z)
+            # print("after plusminus fail z")      
+
+
+    if solveFor == "x" or solveFor == "all":
+        # print("Solve for x")
+        if not plusMinus(l2.d.z * l1.d.y - l2.d.y * l1.d.z, 0) and not plusMinus(l1.d.y, 0):
+            t = (l2.p0.y * l1.d.z - l1.p0.y * l1.d.z - l2.p0.z * l1.d.y + l1.p0.z * l1.d.y) / (l2.d.z * l1.d.y - l2.d.y * l1.d.z)
+            s = (l2.p0.y + t * l2.d.y - l1.p0.y) / l1.d.y
+
+            # print("before plusminus x")
+            if plusMinus(l1.p0.x + s * l1.d.x, l2.p0.x + t * l2.d.x):
+                # print("after plusminus success x")
+                return Point(l1.p0.x + s * l1.d.x, l1.p0.y + s * l1.d.y, l1.p0.z + s * l1.d.z)
+            # print("after plusminus fail x")
+
+    
+    if solveFor == "y" or solveFor == "all":
+        # print("Solve for y")
+        if not plusMinus(l2.d.z * l1.d.x - l2.d.x * l1.d.z, 0) and not plusMinus(l1.d.x, 0):
+            # print("{} == {}".format(l2.d.y * l1.d.x - l2.d.x * l1.d.y, 0))
+            t = (l2.p0.x * l1.d.z - l1.p0.x * l1.d.z + l1.p0.z * l1.d.x - l2.p0.z * l1.d.x) / (l2.d.z * l1.d.x - l2.d.x * l1.d.z)
+            s = (l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x
+
+            # print("before plusminus y")
+            if plusMinus(l1.p0.y + s * l1.d.y, l2.p0.y + t * l2.d.y):
+                # print("after plusminus success y")
+                return Point(l1.p0.x + s * l1.d.x, l1.p0.y + s * l1.d.y, l1.p0.z + s * l1.d.z)
+            # print("after plusminus fail y")
+
     return None
+
+
+    # t = (l1.d.x * (l1.p0.y - l2.p0.y) - l1.p0.x * l1.d.y + l2.p0.x * l1.d.y) / (l2.d.y * l1.d.x - l2.d.x * l1.d.y)
+
+    # # Indsæt dette i ligningen for x:
+    # print("l1.d.x == 0  ->  {} == {}".format(l1.d.x, 0))
+    # if plusMinus(l1.d.x, 0):
+    #     print("{} == {}".format(l1.d.x, 0))
+    #     return None
+    # s = (l2.p0.x + t * l2.d.x - l1.p0.x) / l1.d.x
+
+    # # Tjek om ligningen for z går op, hvis man substituerer de to:
+    # # z:
+    # # l1.p0.z + s * l1.d.z = l2.p0.z + t * l2.d.z
+# 
+    # print("l1.p0.z + s * l1.d.z == l2.p0.z + t * l2.d.z  ->  {} == {}".format(l1.p0.z + s * l1.d.z, l2.p0.z + t * l2.d.z))
+    # if plusMinus(l1.p0.z + s * l1.d.z, l2.p0.z + t * l2.d.z):
+    #     return Point(l1.p0.x + s * l1.d.x, l1.p0.y + s * l1.d.y, l1.p0.z + s * l1.d.z)
+    # return None
    
 
 
@@ -393,22 +654,34 @@ def lineLineIntersectionCalc(l1: Line, l2: Line):
     # #     return None
 
 def isWithinSegments(p0: Point, d: Vector, segments: [Segment]):
+    # print("\nisWithinSegments({}, {})".format(p0, d))
     l = Line(p0, d)
+    # print("Line: {}".format(l))
+    # for s in segments:
+        
+        # print("s: {}".format(s))
+
 
     crossings = 0
     intersections = []
 
     segLines = []
     for seg in segments:
+        # print("\nseg: {}".format(seg))
         segLine = Line.createTwoPoints(seg.v1, seg.v2)
         segLines.append(segLine)
+        # print("lineLineIntersection({}, {})".format(l, segLine))
         intersection = lineLineIntersection(l, segLine)
-        print("intersection {}".format(intersection))
-        if intersection and l.getPointT(intersection) >= 0: 
+        # print("Yay: intersection {}\n".format(intersection))
+        intersections.append(intersection)
+
+
+        
+        if intersection and l.getPointT(intersection) and l.getPointT(intersection) >= 0: 
             intersections.append(intersection)
 
             if onLineBetweenPoints(intersection, seg.v1, seg.v2):
-                print("T val: {}".format(l.getPointT(intersection)))
+                # print("T val: {}".format(l.getPointT(intersection)))
                 crossings += 1
                 intersections.append(intersection)
     # print(crossings)
@@ -416,7 +689,7 @@ def isWithinSegments(p0: Point, d: Vector, segments: [Segment]):
     within = None
     if crossings % 2 == 1: within = True
     else: within = False
-    print("l for point {} -> {}".format(p0, l))
+    # print("l for point {} -> {}".format(p0, l))
     return [[l], intersections, segLines, within]
 
 def segmentSegmentIntersection(seg1, segments: [Segment]):
@@ -439,15 +712,15 @@ def segmentSegmentIntersection(seg1, segments: [Segment]):
         #         continue
         #     intersection = intersection2
         inters.append(intersection)
-        print("segseginters {}".format(intersection))
+        # print("segseginters {}".format(intersection))
         if intersection and onLineBetweenPoints(intersection, seg1.v1, seg1.v2) and onLineBetweenPoints(intersection, seg2.v1, seg2.v2):
             return [lineSegs, intersection, inters]
     return [lineSegs, None, inters]
     
 def onLineBetweenPoints(pMid: Point, pMin: Point, pMax: Point):
-    print("distance(pMid, pMin) + distance(pMid, pMax) == distance(pMin, pMax)  ->  {} == {}".format(distance(pMid, pMin) + distance(pMid, pMax), distance(pMin, pMax)))
+    # print("distance(pMid, pMin) + distance(pMid, pMax) == distance(pMin, pMax)  ->  {} == {}".format(distance(pMid, pMin) + distance(pMid, pMax), distance(pMin, pMax)))
     if plusMinus(distance(pMid, pMin) + distance(pMid, pMax), distance(pMin, pMax)):
-        print("Is between {} == {}".format(distance(pMid, pMin) + distance(pMid, pMax), distance(pMin, pMax)))
+        # print("Is between {} == {}".format(distance(pMid, pMin) + distance(pMid, pMax), distance(pMin, pMax)))
     # if distance(pMid, pMin) + distance(pMid, pMax) >= distance(pMin, pMax) - 0.01 and distance(pMid, pMin) + distance(pMid, pMax) <= distance(pMin, pMax) + 0.01:
         return True
     return False
@@ -468,6 +741,8 @@ def intersection(pl: Plane, l: Line):
 
     planEqB = planN.x * pl.p0.x + planN.y * pl.p0.y + planN.z * pl.p0.z
 
+    if (planN.x * l.d.x + planN.y * l.d.y + planN.z * l.d.z) == 0:
+        return False
     t = -(planN.x * l.p0.x + planN.y * l.p0.y + planN.z * l.p0.z - planEqB) / (planN.x * l.d.x + planN.y * l.d.y + planN.z * l.d.z)
     
     x = l.p0.x + t * l.d.x
@@ -508,9 +783,10 @@ def add(v1: Vector, v2: Vector) -> Vector:
 
 def plusMinus(x, y):
     margin = 0.0000001
-    print("plusMinus: {} == {}".format(x,y))
     if x >= y - margin and x <= y + margin:
+        # print("plusMinusSuccess: {} == {}".format(x,y))
         return True
+    # print("plusMinusFail: {} == {}".format(x,y))
     return False
 
 def subtract(v1: Vector, v2: Vector) -> Vector:
