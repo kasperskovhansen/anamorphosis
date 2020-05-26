@@ -10,18 +10,18 @@ class Point():
         self.color = color
         self.alpha = alpha
 
-    def coords(self):
-        return [self.x, self.y, self.z]
+    def coords(self) -> list:
+        return [self.x, self.y, self.z]    
 
-    def translate(self, d):
-        self.x += d.x
-        self.y += d.y
-        self.z += d.z
-
-    def add(self, p1):
+    def add(self, p1) -> None:
         self.x += p1.x
         self.y += p1.y
         self.z += p1.z
+
+    def subtract(self, v1) -> None:        
+        self.x -= v1.x
+        self.y -= v1.y
+        self.z -= v1.z
 
     def __str__(self):
         '''
@@ -53,17 +53,6 @@ class Vector(Point):
         '''
         #Prøv selv
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
-
-    def add(self, v1) -> None:        
-        self.x += v1.x
-        self.y += v1.y
-        self.z += v1.z        
-
-
-    def subtract(self, v1) -> None:        
-        self.x -= v1.x
-        self.y -= v1.y
-        self.z -= v1.z
 
     def __str__(self):
         '''
@@ -99,7 +88,7 @@ class Line():
         '''
         Returnerer et punkt på linjen, svarende til en given t-værdi
         '''
-        if not isinstance(t, (float, int)):
+        if not isinstance(t, (float, int)):            
             raise TypeError('t har ikke en gyldig værdi')
 
         p = Vector.fromPoint(self.p0)
@@ -132,9 +121,9 @@ class Line():
         return self.point(t)
 
     def getPointT(self, p: Point):
-        # print(self)
-        # print(p)
-        
+        '''
+        Returnerer en t-værdi til et givent punkt
+        '''
         if not self.d.x == 0:
             t = (p.x - self.p0.x) / self.d.x
             if not self.d.y == 0:
@@ -159,23 +148,13 @@ class Line():
             elif not self.d.x == 0:
                 if plusMinus(t * self.d.x + self.p0.x, p.x):
                     return t
-
-        return None
-        
-        # print(t)
-        # print("t * self.d.y + self.p0.y == p.y  ->  {} == {}".format(t * self.d.y + self.p0.y,p.y))
-        if plusMinus(t * self.d.y + self.p0.y, p.y):
-            print(t)
-            return t
-        return None
-
+        return None        
 
     def __str__(self):
         '''
         Her defineres hvordan linjen skal printes til konsollen
         '''
         return "(x,y,z) = <{}, {}, {}> + t*<{}, {}, {}>".format(self.p0.x, self.p0.y, self.p0.z, self.d.x, self.d.y, self.d.z)
-
 
 class Segment():
     def __init__(self, v1: Vector, v2: Vector, color="black", alpha=1):
@@ -278,7 +257,6 @@ class Object():
         vec.add(self.startVec)
         return vec
 
-
     def applyRotation(self, xAng: (float, int), yAng: (float, int), zAng: (float, int)):
         self.Rx = np.array([[1,0,0], [0,math.cos(xAng), math.sin(xAng)], [0, -math.sin(xAng), math.cos(xAng)]])
         self.Ry = np.array([[math.cos(yAng),0,-math.sin(yAng)], [0, 1, 0], [math.sin(yAng), 0, math.cos(yAng)]])
@@ -299,7 +277,7 @@ class Object():
             print("Plan")
             self.mathPlane = Plane.createFromThreePoints(self.points[0], self.points[1], self.points[2])
 
-    def setScale(self, scale):
+    def setScale(self, scale: (float, int)):
         oldCenter = self.centerPoint
         # for point in self.points:
         #     point.subtract(self.points[0])
@@ -311,27 +289,20 @@ class Object():
         for point in self.points:
             point.add(subtract(oldCenter, self.centerPoint))
 
-
     def __str__(self):
         '''
         Her defineres hvordan linjen skal printes til konsollen
         '''
         return "{}".format(self.points)
 
-    def rotate(self, axis: str, degrees: float):
-        '''
-        Drej figuren om centerPoint og den givne akse med et bestemt antal grader.
-        '''
-        pass
 
     def translate(self, d: Vector):
         '''
         Translater figuren med vektoren d.
-        '''
-        # self.centerPoint.translate(d)
+        '''        
         for point in self.points:
-            point.translate(d)
-        self.centerPoint.translate(d)    
+            point.add(d)
+        self.centerPoint.add(d)    
 
 def buildFpSegments(v0, scale, objType):
     scale = float(scale)
@@ -692,7 +663,7 @@ def isWithinSegments(p0: Point, d: Vector, segments: [Segment]):
     # print("l for point {} -> {}".format(p0, l))
     return [[l], intersections, segLines, within]
 
-def segmentSegmentIntersection(seg1, segments: [Segment]):
+def segmentSegmentsIntersection(seg1, segments: [Segment]):
     lineSegs = []
     inters = []
 
@@ -725,7 +696,7 @@ def onLineBetweenPoints(pMid: Point, pMin: Point, pMax: Point):
         return True
     return False
 
-def intersection(pl: Plane, l: Line):
+def planeLineIntersection(pl: Plane, l: Line):
     '''
     Skæringspunkt mellem plan og linje.
     '''
@@ -744,12 +715,8 @@ def intersection(pl: Plane, l: Line):
     if (planN.x * l.d.x + planN.y * l.d.y + planN.z * l.d.z) == 0:
         return False
     t = -(planN.x * l.p0.x + planN.y * l.p0.y + planN.z * l.p0.z - planEqB) / (planN.x * l.d.x + planN.y * l.d.y + planN.z * l.d.z)
-    
-    x = l.p0.x + t * l.d.x
-    y = l.p0.y + t * l.d.y
-    z = l.p0.z + t * l.d.z
-
-    intersection = Point(x, y, z)
+ 
+    intersection = Point(l.p0.x + t * l.d.x, l.p0.y + t * l.d.y, l.p0.z + t * l.d.z)
     return intersection
 
 
