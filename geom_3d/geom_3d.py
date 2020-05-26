@@ -192,11 +192,11 @@ class Plane():
         d2 = Vector.connect(p1, p3)
         return cls(p3, d1, d2)
 
-class Object():
-    def __init__(self, points: [Point], segments: [Segment] = None, obj_type: str = "", name: str = "", scale: (float, int) = 1, deleteable: bool = True, mathPlane: Plane = None, start_vec: Vector = Vector(0,0,0)):
+class Figure():
+    def __init__(self, points: [Point], segments: [Segment] = None, fig_type: str = "", name: str = "", scale: (float, int) = 1, deleteable: bool = True, mathPlane: Plane = None, start_vec: Vector = Vector(0,0,0)):
         self.points = points
         self.segments = segments
-        self.obj_type = obj_type
+        self.fig_type = fig_type
         self.name = name
         self.id = uuid.uuid4() 
         
@@ -212,27 +212,27 @@ class Object():
         self.deleteable = deleteable        
         self.mathPlane = mathPlane        
     @classmethod
-    def create_type(cls, obj_type: str, scale: float, v0: Vector, name: str = "", deleteable: bool = True):
+    def create_type(cls, fig_type: str, scale: float, v0: Vector, name: str = "", deleteable: bool = True):
         '''
-        Returnerer et objekt af en given type
+        Returnerer en figur af en given type
         '''
-        if obj_type == "Kasse":            
-            fp_segments = build_fp_segments(v0, scale, obj_type)
-            return cls(fp_segments[0], segments=fp_segments[1], obj_type=obj_type, name = name, scale=scale, start_vec=v0)
+        if fig_type == "Kasse":            
+            fp_segments = build_fp_segments(v0, scale, fig_type)
+            return cls(fp_segments[0], segments=fp_segments[1], fig_type=fig_type, name = name, scale=scale, start_vec=v0)
 
-        if obj_type == "K":            
-            fp_segments = build_fp_segments(v0, scale, obj_type)
-            return cls(fp_segments[0], segments=fp_segments[1], obj_type=obj_type, name = name, scale=scale, start_vec=v0)
+        if fig_type == "K":            
+            fp_segments = build_fp_segments(v0, scale, fig_type)
+            return cls(fp_segments[0], segments=fp_segments[1], fig_type=fig_type, name = name, scale=scale, start_vec=v0)
 
-        elif obj_type == "Observationspunkt":
-            return cls([Vector(v0.x,v0.y,v0.z)], deleteable=deleteable, obj_type=obj_type, name = name, scale=scale, start_vec=v0)
+        elif fig_type == "Observationspunkt":
+            return cls([Vector(v0.x,v0.y,v0.z)], deleteable=deleteable, fig_type=fig_type, name = name, scale=scale, start_vec=v0)
         
-        elif obj_type == "Plan":
+        elif fig_type == "Plan":
             # Figur punkter.
-            fp_segments = build_fp_segments(v0, scale, obj_type)
-            return cls(fp_segments[0], segments=fp_segments[1], deleteable=deleteable, obj_type=obj_type, name = name, scale=scale, mathPlane=fp_segments[2], start_vec=v0)
+            fp_segments = build_fp_segments(v0, scale, fig_type)
+            return cls(fp_segments[0], segments=fp_segments[1], deleteable=deleteable, fig_type=fig_type, name = name, scale=scale, mathPlane=fp_segments[2], start_vec=v0)
         
-        elif obj_type == "Icosahedron":
+        elif fig_type == "Icosahedron":
             h = 0.5*(1+np.sqrt(5))
             p1 = np.array([[0, 1, h], [0, 1, -h], [0, -1, h], [0, -1, -h]])
             p2 = p1[:, [1, 2, 0]]
@@ -242,9 +242,9 @@ class Object():
             fp = []
             for point in arr:                
                 fp.append(Point(point[0], point[1], point[2]))
-            return cls(fp, obj_type=obj_type, name = name, scale=scale, start_vec=v0)
+            return cls(fp, fig_type=fig_type, name = name, scale=scale, start_vec=v0)
 
-        elif obj_type == "Tetrahedron":
+        elif fig_type == "Tetrahedron":
             pass
     
     def calc_center_point(self):
@@ -272,7 +272,7 @@ class Object():
 
     def apply_rotation(self, x_ang: (float, int), y_ang: (float, int), z_ang: (float, int)):
         '''
-        Multiplicerer alle objektets punkter med en rotationsmatrix og roterer dermed figuren
+        Multiplicerer alle figurens punkter med en rotationsmatrix og roterer dermed figuren
         '''
         r_x = np.array([[1,0,0], [0,math.cos(x_ang), math.sin(x_ang)], [0, -math.sin(x_ang), math.cos(x_ang)]])
         r_y = np.array([[math.cos(y_ang),0,-math.sin(y_ang)], [0, 1, 0], [math.sin(y_ang), 0, math.cos(y_ang)]])
@@ -289,7 +289,7 @@ class Object():
             point.z = vec[2]
             point.add(self.center_point)
 
-        if self.obj_type == "Plan":
+        if self.fig_type == "Plan":
             print("Plan")
             self.mathPlane = Plane.create_from_three_points(self.points[0], self.points[1], self.points[2])
 
@@ -299,19 +299,12 @@ class Object():
         '''
         old_center = self.center_point        
         self.scale = scale
-        fp_segments = build_fp_segments(self.start_vec, self.scale, self.obj_type)
+        fp_segments = build_fp_segments(self.start_vec, self.scale, self.fig_type)
         self.points = fp_segments[0]
         self.segments = fp_segments[1]
         self.center_point = self.calc_center_point()
         for point in self.points:
             point.add(subtract(old_center, self.center_point))
-
-    def __str__(self):
-        '''
-        Her defineres hvordan linjen skal printes til konsollen
-        '''
-        return "{}".format(self.points)
-
 
     def translate(self, d: Vector):
         '''
@@ -321,17 +314,17 @@ class Object():
             point.add(d)
         self.center_point.add(d)    
 
-def build_fp_segments(v0, scale, obj_type):
+def build_fp_segments(v0, scale, fig_type):
     '''
-    Returnerer lister med punkter og med segmenter for et objekt af en given type
+    Returnerer lister med punkter og med segmenter for et figur af en given type
     '''
     scale = float(scale)
     mathPlane = None
 
-    if obj_type == "Kasse":       
+    if fig_type == "Kasse":       
         fp = [Vector(v0.x, v0.y, v0.z), Vector(v0.x + scale, v0.y, v0.z), Vector(v0.x + scale, v0.y + scale, v0.z), Vector(v0.x, v0.y + scale, v0.z), Vector(v0.x, v0.y, v0.z + scale), Vector(v0.x + scale, v0.y, v0.z + scale), Vector(v0.x + scale, v0.y + scale, v0.z + scale), Vector(v0.x, v0.y + scale, v0.z + scale)]
         segments = [Segment(fp[0],fp[1]), Segment(fp[0],fp[3]), Segment(fp[0],fp[4]), Segment(fp[1],fp[2]), Segment(fp[1],fp[5]), Segment(fp[2],fp[3]), Segment(fp[2],fp[6]), Segment(fp[3],fp[7]), Segment(fp[4],fp[5]), Segment(fp[5],fp[6]), Segment(fp[6],fp[7]), Segment(fp[4],fp[7])]
-    elif obj_type == "K":
+    elif fig_type == "K":
         scale = scale / 6
         fp = [Vector(v0.x, v0.y, v0.z), Vector(v0.x + 4*scale, v0.y, v0.z), Vector(v0.x + 4*scale, v0.y, v0.z + 6*scale), Vector(v0.x + 8 * scale, v0.y, v0.z), Vector(v0.x + 13 * scale, v0.y, v0.z), Vector(v0.x + 8 * scale, v0.y, v0.z + 8*scale), Vector(v0.x + 13 * scale, v0.y, v0.z + 16 * scale), Vector(v0.x + 8 * scale, v0.y, v0.z + 16 * scale), Vector(v0.x + 4*scale, v0.y, v0.z + 10*scale), Vector(v0.x + 4*scale, v0.y, v0.z + 16 * scale), Vector(v0.x, v0.y, v0.z + 16 * scale), Vector(v0.x, v0.y + 4 * scale, v0.z + 16 * scale),     Vector(v0.x, v0.y + 4 * scale, v0.z), Vector(v0.x + 4*scale, v0.y + 4 * scale, v0.z), Vector(v0.x + 4*scale, v0.y + 4 * scale, v0.z + 6*scale), Vector(v0.x + 8 * scale, v0.y + 4 * scale, v0.z), Vector(v0.x + 13 * scale, v0.y + 4 * scale, v0.z), Vector(v0.x + 8 * scale, v0.y + 4 * scale, v0.z + 8*scale), Vector(v0.x + 13 * scale, v0.y + 4 * scale, v0.z + 16 * scale), Vector(v0.x + 8 * scale, v0.y + 4 * scale, v0.z + 16 * scale), Vector(v0.x + 4*scale, v0.y + 4 * scale, v0.z + 10*scale), Vector(v0.x + 4*scale, v0.y + 4 * scale, v0.z + 16 * scale)]
         segments = []
@@ -345,7 +338,7 @@ def build_fp_segments(v0, scale, obj_type):
             if i >= 0 and i < 10:
                 segments.append(Segment(fp[i], fp[i + 1], color="red"))            
             segments.append(Segment(fp[10], fp[0], color="red"))
-    elif obj_type == "Plan":
+    elif fig_type == "Plan":
         fp = [Vector(v0.x, v0.y, v0.z), Vector(v0.x + scale, v0.y, v0.z), Vector(v0.x + scale, v0.y + scale, v0.z), Vector(v0.x, v0.y + scale, v0.z)]
         segments = [Segment(fp[0], fp[1]), Segment(fp[1], fp[2]), Segment(fp[2], fp[3]), Segment(fp[0], fp[3])]
         # Matematisk repræsentation af planen.

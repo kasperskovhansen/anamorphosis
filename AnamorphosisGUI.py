@@ -23,10 +23,10 @@ class AnamorphosisGUI(ttk.Frame):
         self.data = DataAnamorphosis()
 
         # Opsætning af den indledende "scene"
-        self.data.add_object(Object.create_type("Plan", 10, Vector(0,0,0), name="Plan", deleteable=True))
-        # self.data.get_objects()[0]
-        self.data.add_object(Object.create_type("Observationspunkt", 1, Vector(9,-5,10), name="Observationspunkt", deleteable=True))
-        self.data.add_object(Object.create_type("K", 1.5, Vector(5,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+        self.data.add_figure(Figure.create_type("Plan", 10, Vector(0,0,0), name="{}. figur".format(str(len(self.data.figures) +1)), deleteable=True))
+        # self.data.get_figures()[0]
+        self.data.add_figure(Figure.create_type("Observationspunkt", 1, Vector(9,-5,10), name="{}. figur".format(str(len(self.data.figures) +1)), deleteable=True))
+        self.data.add_figure(Figure.create_type("K", 1.5, Vector(5,1,1), name="{}. figur".format(str(len(self.data.figures) +1))))
 
         # Opsætning af graf
         self.data.fig = plt.figure()
@@ -37,33 +37,33 @@ class AnamorphosisGUI(ttk.Frame):
         self.reload_table()
         self.show_3D()
 
-    def on_object_selected(self, event):
+    def on_figure_selected(self, event):
         '''
         Opdaterer det valgte id i datalaget
         '''
         cur_item = self.db_view.item(self.db_view.focus())['values']
         self.data.set_selected_id(cur_item[2])
         
-    def add_object(self):
+    def add_figure(self):
         '''
-        Viser dialog med mulighed for at tilføje et nyt objekt
+        Viser dialog med mulighed for at tilføje en ny figur
         '''
         def accept():
             '''
-            Opretter det nye objekt
+            Opretter den nye figur
             '''
-            obj_type = self.type_var.get()
-            obj_scale = scale.get()
-            if obj_type == "Kasse":
-                self.data.add_object(Object.create_type("Kasse", float(obj_scale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
-            if obj_type == "K":                
-                self.data.add_object(Object.create_type("K", float(obj_scale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
-            elif obj_type == "Plan":
-                self.data.add_object(Object.create_type("Plan", float(obj_scale), Vector(0,0,0), name="{}. objekt".format(str(len(self.data.objects) +1))))
-            elif obj_type == "Observationspunkt":
-                self.data.add_object(Object.create_type("Observationspunkt", float(obj_scale), Vector(0,0,6), name="{}. objekt".format(str(len(self.data.objects) +1))))
-            elif obj_type == "Icosahedron":
-                self.data.add_object(Object.create_type("Icosahedron", float(obj_scale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+            fig_type = self.type_var.get()
+            fig_scale = scale.get()
+            if fig_type == "Kasse":
+                self.data.add_figure(Figure.create_type("Kasse", float(fig_scale), Vector(1,1,1), name="{}. figur".format(str(len(self.data.figures) +1))))
+            if fig_type == "K":                
+                self.data.add_figure(Figure.create_type("K", float(fig_scale), Vector(1,1,1), name="{}. figur".format(str(len(self.data.figures) +1))))
+            elif fig_type == "Plan":
+                self.data.add_figure(Figure.create_type("Plan", float(fig_scale), Vector(0,0,0), name="{}. figur".format(str(len(self.data.figures) +1))))
+            elif fig_type == "Observationspunkt":
+                self.data.add_figure(Figure.create_type("Observationspunkt", float(fig_scale), Vector(0,0,6), name="{}. figur".format(str(len(self.data.figures) +1))))
+            elif fig_type == "Icosahedron":
+                self.data.add_figure(Figure.create_type("Icosahedron", float(fig_scale), Vector(1,1,1), name="{}. figur".format(str(len(self.data.figures) +1))))
             
             self.reload_table()
             self.reload_graph()
@@ -77,7 +77,7 @@ class AnamorphosisGUI(ttk.Frame):
             color = colorchooser.askcolor()[1]            
 
         dlg = tk.Toplevel()
-        dlg.title("Tilføj objekt")
+        dlg.title("Tilføj figur")
 
         ttk.Label(dlg, text='Type:').grid(column =0, row = 0)
         types = ["Kasse", "Kasse", "K", "Plan", "Observationspunkt", "Icosahedron"]
@@ -98,15 +98,15 @@ class AnamorphosisGUI(ttk.Frame):
         ttk.Button(dlg, text="Tilføj", command=accept).grid(column=0,row=20)
         ttk.Button(dlg, text="Annuller", command=cancel).grid(column=1,row=20)
     
-    def edit_object(self):
+    def edit_figure(self):
         '''
-        Viser en dialog med mulighed for at redigere et valgt objekt
+        Viser en dialog med mulighed for at redigere en valgt figur
         '''
         def save():
             '''
-            Gemmer ændringerne til objektet
+            Gemmer ændringerne til figuren
             '''
-            self.data.objects[self.data.get_selected_idx()].set_scale(scale.get())
+            self.data.figures[self.data.get_selected_idx()].set_scale(scale.get())
             self.reload_graph()
             dlg.destroy()
 
@@ -118,24 +118,24 @@ class AnamorphosisGUI(ttk.Frame):
             return
 
         dlg = tk.Toplevel()
-        dlg.title("Rediger objekt")
+        dlg.title("Rediger figur")
 
         ttk.Label(dlg, text='Scale:').grid(column =0, row = 0)
-        var = tk.DoubleVar(value=self.data.objects[self.data.get_selected_idx()].scale)
+        var = tk.DoubleVar(value=self.data.figures[self.data.get_selected_idx()].scale)
         scale = tk.Spinbox(dlg, from_=0.1, to_=5, increment=0.1, textvariable=var)
         scale.grid(sticky='nsew',column=1, row=0)
 
         ttk.Button(dlg, text="Gem", command=save).grid(column=0,row=20)
         ttk.Button(dlg, text="Annuller", command=cancel).grid(column=1,row=20)
 
-    def delete_object(self):
+    def delete_figure(self):
         '''
-        Slet et valgt objekt
+        Slet en valgt figur
         '''
         def delete():
             idx = self.data.get_selected_idx()
-            if self.data.objects[idx].deleteable == True:
-                self.data.objects.pop(idx)
+            if self.data.figures[idx].deleteable == True:
+                self.data.figures.pop(idx)
                 self.reload_table()
                 self.reload_graph()
                 dlg.destroy()
@@ -148,9 +148,9 @@ class AnamorphosisGUI(ttk.Frame):
             return
         
         dlg = tk.Toplevel()
-        dlg.title("Slet objekt")
+        dlg.title("Slet figur")
 
-        ttk.Label(dlg, text='Er du sikker på, at du vil slette objektet "{}"?'.format(cur_item[0])).grid(column =0, row = 0, columnspan = 2)
+        ttk.Label(dlg, text='Er du sikker på, at du vil slette figuren "{}"?'.format(cur_item[0])).grid(column =0, row = 0, columnspan = 2)
        
         ttk.Button(dlg, text="Slet", command=delete).grid(column=0,row=20)
         ttk.Button(dlg, text="Annuller", command=cancel).grid(column=1,row=20)
@@ -194,7 +194,7 @@ class AnamorphosisGUI(ttk.Frame):
             y_ang = -self.data.rotation_step
         elif self.data.axis == "z-akse":
             z_ang = -self.data.rotation_step
-        self.data.objects[self.data.selected_idx].apply_rotation(x_ang, y_ang, z_ang)
+        self.data.figures[self.data.selected_idx].apply_rotation(x_ang, y_ang, z_ang)
         self.reload_graph()
 
     def move_up(self): # pylint: disable=E0202
@@ -209,7 +209,7 @@ class AnamorphosisGUI(ttk.Frame):
         elif self.data.axis == "z-akse":
             d = Vector(0, 0, 1)
         
-        self.data.objects[self.data.selected_idx].translate(d)
+        self.data.figures[self.data.selected_idx].translate(d)
         self.reload_graph()
 
     def move_down(self): # pylint: disable=E0202      
@@ -224,30 +224,30 @@ class AnamorphosisGUI(ttk.Frame):
         elif self.data.axis == "z-akse":
             d = Vector(0, 0, -1)
         
-        self.data.objects[self.data.selected_idx].translate(d)
+        self.data.figures[self.data.selected_idx].translate(d)
         self.reload_graph()
 
     def toggle_visibility(self):
         '''
-        Slår synligheden af det valgte objekt til eller fra
+        Slår synligheden af den valgte figur til eller fra
         '''
         idx = self.data.get_selected_idx()
-        if self.data.objects[idx].visible == True:
-            self.data.objects[idx].visible == False
+        if self.data.figures[idx].visible == True:
+            self.data.figures[idx].visible == False
 
-        self.data.objects[idx].visible = False if self.data.objects[idx].visible else True
+        self.data.figures[idx].visible = False if self.data.figures[idx].visible else True
             
         self.reload_graph()
 
     def toggle_anamorphosis(self):
         '''
-        Slår synligheden af anamorfosetegningen dannet af det valgte objekt til eller fra
+        Slår synligheden af anamorfosetegningen dannet af den valgte figur til eller fra
         '''
         idx = self.data.get_selected_idx()
-        if self.data.objects[idx].anamorphosis_visible == True:
-            self.data.objects[idx].anamorphosis_visible == False
+        if self.data.figures[idx].anamorphosis_visible == True:
+            self.data.figures[idx].anamorphosis_visible == False
 
-        self.data.objects[idx].anamorphosis_visible = False if self.data.objects[idx].anamorphosis_visible else True
+        self.data.figures[idx].anamorphosis_visible = False if self.data.figures[idx].anamorphosis_visible else True
             
         self.reload_graph()
 
@@ -288,7 +288,7 @@ class AnamorphosisGUI(ttk.Frame):
             y_ang = self.data.rotation_step
         elif self.data.axis == "z-akse":
             z_ang = self.data.rotation_step
-        self.data.objects[self.data.selected_idx].apply_rotation(x_ang, y_ang, z_ang)
+        self.data.figures[self.data.selected_idx].apply_rotation(x_ang, y_ang, z_ang)
         self.reload_graph()
 
     def axis_change(self, val): # pylint: disable=E0202
@@ -299,13 +299,13 @@ class AnamorphosisGUI(ttk.Frame):
 
     def reload_table(self):
         '''
-        Genindlæser tabellen med objekter
+        Genindlæser tabellen med figurer
         '''
         self.db_view.delete(*self.db_view.get_children())
-        if len(self.data.objects) == 0:
+        if len(self.data.figures) == 0:
             return
-        for obj in self.data.objects:
-            self.db_view.insert("", tk.END, values=(obj.name, obj.obj_type, obj.id))
+        for fig in self.data.figures:
+            self.db_view.insert("", tk.END, values=(fig.name, fig.fig_type, fig.id))
 
     def build_GUI(self):
         '''
@@ -324,14 +324,14 @@ class AnamorphosisGUI(ttk.Frame):
 
         # Col 1 fra venstre.
         tk.Canvas(main_frame, width=math.floor(screen_width/3), height=0).grid(column=0, row=20, columnspan=2)
-        ttk.Label(main_frame, text="Objekter", background="white").grid(sticky='ew', column=0, row=0, columnspan=2)
+        ttk.Label(main_frame, text="Figurer", background="white").grid(sticky='ew', column=0, row=0, columnspan=2)
         
         s = ttk.Style()
         s.configure('Treeview', rowheight=31)
         s.configure("TSeparator", background="red")
         
         self.db_view = ttk.Treeview(main_frame, column=("column1", "column2", "column3"), show='headings')
-        self.db_view.bind("<ButtonRelease-1>", self.on_object_selected)
+        self.db_view.bind("<ButtonRelease-1>", self.on_figure_selected)
         self.db_view.heading("#1", text="Navn")
         self.db_view.heading("#2", text="Type")
         self.db_view.heading("#3", text="Id")
@@ -352,10 +352,10 @@ class AnamorphosisGUI(ttk.Frame):
         ttk.Label(main_frame, text="Funktioner", background="white").grid(sticky='ew', column=2, row=0, columnspan=2)
         
         # Funktionsknapper.
-        self.btn_add = ttk.Button(main_frame, text="Tilføj objekt", command=self.add_object).grid(sticky='ew', column=2, row=1, columnspan=2)
-        self.btn_edit = ttk.Button(main_frame, text="Rediger objekt", command=self.edit_object).grid(sticky='ew', column=2, row=2, columnspan=2)
-        self.btn_delete = ttk.Button(main_frame, text="Slet objekt", command=self.delete_object).grid(sticky='ew', column=2, row=3, columnspan=2)
-        self.btn_visible = ttk.Button(main_frame, text="Ændr synlighed", command=self.toggle_visibility).grid(sticky='ew', column=2, row=4, columnspan=2)
+        self.btn_add = ttk.Button(main_frame, text="Tilføj figur", command=self.add_figure).grid(sticky='ew', column=2, row=1, columnspan=2)
+        self.btn_edit = ttk.Button(main_frame, text="Rediger figur", command=self.edit_figure).grid(sticky='ew', column=2, row=2, columnspan=2)
+        self.btn_delete = ttk.Button(main_frame, text="Slet figur", command=self.delete_figure).grid(sticky='ew', column=2, row=3, columnspan=2)
+        self.btn_visible = ttk.Button(main_frame, text="Ændr synlighed af figur", command=self.toggle_visibility).grid(sticky='ew', column=2, row=4, columnspan=2)
         self.btn_anamorphosis = ttk.Button(main_frame, text="Anamorfose synlighed", command=self.toggle_anamorphosis).grid(sticky='ew', column=2, row=5, columnspan=2)
 
         self.btn_hud = ttk.Button(main_frame, text="Ændr HUD synlighed", command=self.toggle_hud).grid(sticky='ew', column=2, row=6, columnspan=2)
@@ -383,14 +383,14 @@ class AnamorphosisGUI(ttk.Frame):
 
     def reload_graph(self):
         '''
-        Genindlæser koordinatsystemet med de seneste ændringer til objekterne
+        Genindlæser koordinatsystemet med de seneste ændringer til figurerne
         '''
         if self.data.ani:
             self.data.ani.event_source.start()
 
     def update_3D_graph(self, i=0):
         '''
-        Indlæser alle objekter i koordinatsystemet fra datalaget
+        Indlæser alle figurer i koordinatsystemet fra datalaget
         '''
         # Gem, reload og indlæs indstillingerne for visningen.
         self.data.azim = self.data.ax.azim
@@ -399,27 +399,27 @@ class AnamorphosisGUI(ttk.Frame):
         self.data.ax.clear()
         self.reset_view()
 
-        for obj in self.data.objects:
-            figPoints = obj.points
-            # print(obj.obj_type)
-            if obj.obj_type == "Observationspunkt":
+        for fig in self.data.figures:
+            figPoints = fig.points
+            # print(fig.fig_type)
+            if fig.fig_type == "Observationspunkt":
                 # Tilføj punktet til tegningen.
-                if obj.visible == True:
-                    self.draw_in_system(obj.points[0], "Point", color="red")            
+                if fig.visible == True:
+                    self.draw_in_system(fig.points[0], "Point", color="red")            
 
-            elif obj.obj_type == "Kasse" or obj.obj_type == "K":
+            elif fig.fig_type == "Kasse" or fig.fig_type == "K":
                 # Segmenter i rummet.
-                if obj.segments != None:
-                    for segment in obj.segments:
+                if fig.segments != None:
+                    for segment in fig.segments:
                         # print(segment)
-                        # print("segment in obj.segments")
-                        if obj.visible == True:
+                        # print("segment in fig.segments")
+                        if fig.visible == True:
                             self.draw_in_system(segment, "Segment", alpha=0.5, color=segment.color)
                         # Projicerede segmenter.
-                        if obj.anamorphosis_visible == False:
+                        if fig.anamorphosis_visible == False:
                             continue
-                        planes = self.data.get_objs_of_type("Plan")
-                        viewPoints = self.data.get_objs_of_type("Observationspunkt")
+                        planes = self.data.get_figs_of_type("Plan")
+                        viewPoints = self.data.get_figs_of_type("Observationspunkt")
 
                         # Tegn segmenter på alle planer set fra alle observationspunkter.
                         for viewPoint in viewPoints:
@@ -450,14 +450,14 @@ class AnamorphosisGUI(ttk.Frame):
                     for point in figPoints:                        
                         self.draw_in_system(point, "Point", color="green")                    
 
-            elif obj.obj_type == "Icosahedron":
-                if obj.visible == True:                          
+            elif fig.fig_type == "Icosahedron":
+                if fig.visible == True:                          
                     for point in figPoints:
                         self.draw_in_system(point, "Point", color="darkgreen")
-                if obj.anamorphosis_visible == False:
+                if fig.anamorphosis_visible == False:
                     continue
-                planes = self.data.get_objs_of_type("Plan")
-                viewPoints = self.data.get_objs_of_type("Observationspunkt")
+                planes = self.data.get_figs_of_type("Plan")
+                viewPoints = self.data.get_figs_of_type("Observationspunkt")
                 for viewPoint in viewPoints:
                     for plane in planes:
                         lines = []
@@ -469,8 +469,8 @@ class AnamorphosisGUI(ttk.Frame):
                             if intersectionPoint:
                                 self.draw_in_system(intersectionPoint, "Point", color="yellow")                            
 
-            elif obj.obj_type == "Plan":
-                if obj.visible == True:                           
+            elif fig.fig_type == "Plan":
+                if fig.visible == True:                           
                     # Plan der agerer gulv/lærred.
                     coordsList = []
                     for p in figPoints:
@@ -479,25 +479,25 @@ class AnamorphosisGUI(ttk.Frame):
                     verts = [list(zip(T[0],T[1],T[2]))]                    
                     # Tilføj plan til tegningen.
                     self.data.ax.add_collection3d(Poly3DCollection(verts, alpha=0.4))                    
-                    for segment in obj.segments:          
+                    for segment in fig.segments:          
                         self.draw_in_system(segment, "Segment", color="darkblue")                                  
         self.data.ani.event_source.stop()
 
-    def draw_in_system(self, obj, obj_type: str, color="black", alpha=1, lineTMin=-5, lineTMax=5, linewidth=2) -> bool:
+    def draw_in_system(self, fig, fig_type: str, color="black", alpha=1, lineTMin=-5, lineTMax=5, linewidth=2) -> bool:
         '''
-        Tegner et objekt af en given type i koordinatsystemet
+        Tegner en figur af en given type i koordinatsystemet
         '''
-        if not obj: return False
-        if obj_type == "Point":            
-            self.data.ax.scatter(obj.x, obj.y, obj.z, color=color, alpha=alpha, linewidth=linewidth)
-        elif obj_type == "Segment":
-            self.data.ax.plot([obj.v1.x, obj.v2.x], [obj.v1.y, obj.v2.y], [obj.v1.z, obj.v2.z], color=color, alpha=alpha, linewidth=linewidth)
-        elif obj_type == "Line":           
-            p1 = obj.point(lineTMin)
-            p2 = obj.point(lineTMax)
+        if not fig: return False
+        if fig_type == "Point":            
+            self.data.ax.scatter(fig.x, fig.y, fig.z, color=color, alpha=alpha, linewidth=linewidth)
+        elif fig_type == "Segment":
+            self.data.ax.plot([fig.v1.x, fig.v2.x], [fig.v1.y, fig.v2.y], [fig.v1.z, fig.v2.z], color=color, alpha=alpha, linewidth=linewidth)
+        elif fig_type == "Line":           
+            p1 = fig.point(lineTMin)
+            p2 = fig.point(lineTMax)
             self.data.ax.plot([p1.x, p2.x], [p1.y, p2.y], [p1.z, p2.z], color=color, alpha=alpha, linewidth=linewidth)
-        elif obj_type == "Vector":
-            self.data.ax.plot([0, obj.x], [0, obj.y], [0, obj.z], color=color, alpha=alpha, linewidth=linewidth)
+        elif fig_type == "Vector":
+            self.data.ax.plot([0, fig.x], [0, fig.y], [0, fig.z], color=color, alpha=alpha, linewidth=linewidth)
         return True    
 
 # Opsætning

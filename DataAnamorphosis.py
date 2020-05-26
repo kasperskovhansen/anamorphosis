@@ -1,7 +1,7 @@
 # Datalaget for anamorfose-tegneprogrammet
 class DataAnamorphosis:
     def __init__(self):
-        self.objects = []
+        self.figures = []
         self.selected_id = None
         self.selected_idx = 0
 
@@ -19,11 +19,11 @@ class DataAnamorphosis:
         # Antal rotations-steps til en hel omgang
         self.rotation_step = 0.2
 
-    def add_object(self, obj):
+    def add_figure(self, fig):
         '''
-        Tilføjer et objekt til listen med objekter
+        Tilføjer en figur til listen med figurer
         '''
-        self.objects.append(obj)
+        self.figures.append(fig)
 
     def set_selected_id(self, selected_id):
         '''
@@ -34,24 +34,24 @@ class DataAnamorphosis:
 
     def get_selected_idx(self):
         '''
-        Returnerer indexet for objektet med det givne id
+        Returnerer indexet for figurer med det givne id
         '''
-        for i in range(len(self.objects)):
-            if str(self.objects[i].id) == str(self.selected_id):
+        for i in range(len(self.figures)):
+            if str(self.figures[i].id) == str(self.selected_id):
                 return i
 
-    def get_objects(self):
+    def get_figures(self):
         '''
-        Returnerer alle objekter
+        Returnerer alle figurer
         '''
-        return self.objects
+        return self.figures
 
-    def get_objs_of_type(self, obj_type: str):
+    def get_figs_of_type(self, fig_type: str):
         '''
-        Returnerer en liste med alle objekter af en given type
+        Returnerer en liste med alle figurer af en given type
         '''
-        objects = []
-        for obj in self.objects:
-            if obj.obj_type == obj_type:
-                objects.append(obj)
-        return objects
+        figures = []
+        for fig in self.figures:
+            if fig.fig_type == fig_type:
+                figures.append(fig)
+        return figures
