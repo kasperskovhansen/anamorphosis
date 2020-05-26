@@ -3,7 +3,7 @@ class DataAnamorphosis:
         self.objects = []
         self.selectedId = None
         self.selectedIdx = 0
-        
+
         self.fig = None
         self.ani = None
         self.axis = "x-akse"
@@ -33,9 +33,9 @@ class DataAnamorphosis:
     def get_objects(self):
         return self.objects
 
-    def get_objs_of_type(self, objType: str):
+    def get_objs_of_type(self, obj_type: str):
         objects = []
         for obj in self.objects:
-            if obj.objType == objType:
+            if obj.obj_type == obj_type:
                 objects.append(obj)
         return objects

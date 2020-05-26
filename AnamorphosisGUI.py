@@ -23,9 +23,10 @@ class AnamorphosisGUI(ttk.Frame):
         self.data = DataAnamorphosis()
 
         # Opsætning af den indledende "scene"
-        self.data.add_object(Object.createType("Plan", 10, Vector(0,0,0), name="Plan", deleteable=True))
-        self.data.add_object(Object.createType("Observationspunkt", 1, Vector(9,-5,10), name="Observationspunkt", deleteable=True))
-        self.data.add_object(Object.createType("K", 1.5, Vector(5,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+        self.data.add_object(Object.create_type("Plan", 10, Vector(0,0,0), name="Plan", deleteable=True))
+        # self.data.get_objects()[0]
+        self.data.add_object(Object.create_type("Observationspunkt", 1, Vector(9,-5,10), name="Observationspunkt", deleteable=True))
+        self.data.add_object(Object.create_type("K", 1.5, Vector(5,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
 
         # Opsætning af graf.
         self.data.fig = plt.figure()
@@ -42,18 +43,18 @@ class AnamorphosisGUI(ttk.Frame):
         
     def add_object(self):
         def accept():
-            objType = self.type_var.get()
+            obj_type = self.type_var.get()
             objScale = scale.get()
-            if objType == "Kasse":
-                self.data.add_object(Object.createType("Kasse", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
-            if objType == "K":                
-                self.data.add_object(Object.createType("K", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
-            elif objType == "Plan":
-                self.data.add_object(Object.createType("Plan", float(objScale), Vector(0,0,0), name="{}. objekt".format(str(len(self.data.objects) +1))))
-            elif objType == "Observationspunkt":
-                self.data.add_object(Object.createType("Observationspunkt", float(objScale), Vector(0,0,6), name="{}. objekt".format(str(len(self.data.objects) +1))))
-            elif objType == "Icosahedron":
-                self.data.add_object(Object.createType("Icosahedron", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+            if obj_type == "Kasse":
+                self.data.add_object(Object.create_type("Kasse", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+            if obj_type == "K":                
+                self.data.add_object(Object.create_type("K", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+            elif obj_type == "Plan":
+                self.data.add_object(Object.create_type("Plan", float(objScale), Vector(0,0,0), name="{}. objekt".format(str(len(self.data.objects) +1))))
+            elif obj_type == "Observationspunkt":
+                self.data.add_object(Object.create_type("Observationspunkt", float(objScale), Vector(0,0,6), name="{}. objekt".format(str(len(self.data.objects) +1))))
+            elif obj_type == "Icosahedron":
+                self.data.add_object(Object.create_type("Icosahedron", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
             
             self.reload_table()
             self.reload_graph()
@@ -89,7 +90,7 @@ class AnamorphosisGUI(ttk.Frame):
     
     def edit_object(self):
         def save():
-            self.data.objects[self.data.get_selected_idx()].setScale(scale.get())
+            self.data.objects[self.data.get_selected_idx()].set_scale(scale.get())
             self.reload_graph()
             dlg.destroy()
 
@@ -166,7 +167,7 @@ class AnamorphosisGUI(ttk.Frame):
             yAng = -self.data.rotation_step
         elif self.data.axis == "z-akse":
             zAng = -self.data.rotation_step
-        self.data.objects[self.data.selectedIdx].applyRotation(xAng, yAng, zAng)
+        self.data.objects[self.data.selectedIdx].apply_rotation(xAng, yAng, zAng)
         self.reload_graph()
 
     def move_up(self): # pylint: disable=E0202
@@ -239,7 +240,7 @@ class AnamorphosisGUI(ttk.Frame):
             yAng = self.data.rotation_step
         elif self.data.axis == "z-akse":
             zAng = self.data.rotation_step
-        self.data.objects[self.data.selectedIdx].applyRotation(xAng, yAng, zAng)
+        self.data.objects[self.data.selectedIdx].apply_rotation(xAng, yAng, zAng)
         self.reload_graph()
 
     def axis_change(self, val): # pylint: disable=E0202
@@ -250,7 +251,7 @@ class AnamorphosisGUI(ttk.Frame):
         if len(self.data.objects) == 0:
             return
         for obj in self.data.objects:
-            self.db_view.insert("", tk.END, values=(obj.name, obj.objType, obj.id))
+            self.db_view.insert("", tk.END, values=(obj.name, obj.obj_type, obj.id))
 
     def build_GUI(self):
         # Titel.
@@ -337,13 +338,13 @@ class AnamorphosisGUI(ttk.Frame):
 
         for obj in self.data.objects:
             figPoints = obj.points
-            # print(obj.objType)
-            if obj.objType == "Observationspunkt":
+            # print(obj.obj_type)
+            if obj.obj_type == "Observationspunkt":
                 # Tilføj punktet til tegningen.
                 if obj.visible == True:
                     self.draw_in_system(obj.points[0], "Point", color="red")            
 
-            elif obj.objType == "Kasse" or obj.objType == "K":
+            elif obj.obj_type == "Kasse" or obj.obj_type == "K":
                 # Segmenter i rummet.
                 if obj.segments != None:
                     for segment in obj.segments:
@@ -361,32 +362,32 @@ class AnamorphosisGUI(ttk.Frame):
                         for viewPoint in viewPoints:
                             for plane in planes:
                                 # print("ViewPoint plane loop")
-                                l1 = Line.createTwoPoints(segment.v1, viewPoint.points[0])
-                                intersectionPoint1 = planeLineIntersection(plane.mathPlane, l1)                            
+                                l1 = Line.create_two_points(segment.v1, viewPoint.points[0])
+                                intersectionPoint1 = plane_line_intersection(plane.mathPlane, l1)                            
                                 
-                                l2 = Line.createTwoPoints(segment.v2, viewPoint.points[0])
-                                intersectionPoint2 = planeLineIntersection(plane.mathPlane, l2)
+                                l2 = Line.create_two_points(segment.v2, viewPoint.points[0])
+                                intersectionPoint2 = plane_line_intersection(plane.mathPlane, l2)
 
                                 planeVec = add(plane.mathPlane.d1, plane.mathPlane.d2)
                                                            
-                                isWithin1 = isWithinSegments(intersectionPoint1, planeVec, plane.segments)
-                                isWithin2 = isWithinSegments(intersectionPoint2, planeVec, plane.segments)                                
+                                isWithin1 = is_within_segments(intersectionPoint1, planeVec, plane.segments)
+                                isWithin2 = is_within_segments(intersectionPoint2, planeVec, plane.segments)                                
                                 seg = Segment(intersectionPoint1, intersectionPoint2)
 
-                                sect = segmentSegmentsIntersection(seg, plane.segments)
+                                sect = segment_segments_intersection(seg, plane.segments)
                 
-                                if isWithin1[3] and isWithin2[3]:
+                                if isWithin1 and isWithin2:
                                     self.draw_in_system(seg, "Segment", color=segment.color)                                
                                 if sect[1]:                                    
-                                    if not isWithin1[3] and isWithin2[3]:                                    
+                                    if not isWithin1 and isWithin2:                                    
                                         self.draw_in_system(Segment(sect[1], seg.v2), "Segment", color=segment.color)
-                                    elif isWithin1[3] and not isWithin2[3]:                                                                                
+                                    elif isWithin1 and not isWithin2:                                                                                
                                         self.draw_in_system(Segment(sect[1], seg.v1), "Segment", color=segment.color)
                 else:
                     for point in figPoints:                        
                         self.draw_in_system(point, "Point", color="green")                    
 
-            elif obj.objType == "Icosahedron":
+            elif obj.obj_type == "Icosahedron":
                 if obj.visible == True:                          
                     for point in figPoints:
                         self.draw_in_system(point, "Point", color="darkgreen")
@@ -396,14 +397,14 @@ class AnamorphosisGUI(ttk.Frame):
                 viewPoints = self.data.get_objs_of_type("Observationspunkt")
                 for viewPoint in viewPoints:
                     for plane in planes:
-                        lines = self.get_lines(Vector.fromPoint(viewPoint.points[0]), figPoints)
+                        lines = self.get_lines(Vector.from_point(viewPoint.points[0]), figPoints)
                         # Liste over punkter projiceret på planen.
                         for line in lines:
-                            intersectionPoint = planeLineIntersection(plane.mathPlane, line)
+                            intersectionPoint = plane_line_intersection(plane.mathPlane, line)
                             if intersectionPoint:
                                 self.draw_in_system(intersectionPoint, "Point", color="yellow")                            
 
-            elif obj.objType == "Plan":
+            elif obj.obj_type == "Plan":
                 if obj.visible == True:                           
                     # Plan der agerer gulv/lærred.
                     coordsList = []
@@ -417,24 +418,24 @@ class AnamorphosisGUI(ttk.Frame):
                         self.draw_in_system(segment, "Segment", color="darkblue")                                  
         self.data.ani.event_source.stop()
 
-    def draw_in_system(self, obj, objType: str, color="black", alpha=1, lineTMin=-5, lineTMax=5, linewidth=2) -> bool:
+    def draw_in_system(self, obj, obj_type: str, color="black", alpha=1, lineTMin=-5, lineTMax=5, linewidth=2) -> bool:
         if not obj: return False
-        if objType == "Point":            
+        if obj_type == "Point":            
             self.data.ax.scatter(obj.x, obj.y, obj.z, color=color, alpha=alpha, linewidth=linewidth)
-        elif objType == "Segment":
+        elif obj_type == "Segment":
             self.data.ax.plot([obj.v1.x, obj.v2.x], [obj.v1.y, obj.v2.y], [obj.v1.z, obj.v2.z], color=color, alpha=alpha, linewidth=linewidth)
-        elif objType == "Line":           
+        elif obj_type == "Line":           
             p1 = obj.point(lineTMin)
             p2 = obj.point(lineTMax)
             self.data.ax.plot([p1.x, p2.x], [p1.y, p2.y], [p1.z, p2.z], color=color, alpha=alpha, linewidth=linewidth)
-        elif objType == "Vector":
+        elif obj_type == "Vector":
             self.data.ax.plot([0, obj.x], [0, obj.y], [0, obj.z], color=color, alpha=alpha, linewidth=linewidth)
         return True
 
     def get_lines(self, viewPoint: Point, figPoints: list):
         lineList = []
         for point in figPoints:
-            lineList.append(Line.createTwoPoints(point, viewPoint))
+            lineList.append(Line.create_two_points(point, viewPoint))
         return lineList
 
 # Opsætning
