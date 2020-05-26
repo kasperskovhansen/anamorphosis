@@ -38,23 +38,23 @@ class AnamorphosisGUI(ttk.Frame):
         self.show_3D()
 
     def on_object_selected(self, event):
-        curItem = self.db_view.item(self.db_view.focus())['values']
-        self.data.set_selected_id(curItem[2])
+        cur_item = self.db_view.item(self.db_view.focus())['values']
+        self.data.set_selected_id(cur_item[2])
         
     def add_object(self):
         def accept():
             obj_type = self.type_var.get()
-            objScale = scale.get()
+            obj_scale = scale.get()
             if obj_type == "Kasse":
-                self.data.add_object(Object.create_type("Kasse", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+                self.data.add_object(Object.create_type("Kasse", float(obj_scale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
             if obj_type == "K":                
-                self.data.add_object(Object.create_type("K", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+                self.data.add_object(Object.create_type("K", float(obj_scale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
             elif obj_type == "Plan":
-                self.data.add_object(Object.create_type("Plan", float(objScale), Vector(0,0,0), name="{}. objekt".format(str(len(self.data.objects) +1))))
+                self.data.add_object(Object.create_type("Plan", float(obj_scale), Vector(0,0,0), name="{}. objekt".format(str(len(self.data.objects) +1))))
             elif obj_type == "Observationspunkt":
-                self.data.add_object(Object.create_type("Observationspunkt", float(objScale), Vector(0,0,6), name="{}. objekt".format(str(len(self.data.objects) +1))))
+                self.data.add_object(Object.create_type("Observationspunkt", float(obj_scale), Vector(0,0,6), name="{}. objekt".format(str(len(self.data.objects) +1))))
             elif obj_type == "Icosahedron":
-                self.data.add_object(Object.create_type("Icosahedron", float(objScale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
+                self.data.add_object(Object.create_type("Icosahedron", float(obj_scale), Vector(1,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
             
             self.reload_table()
             self.reload_graph()
@@ -99,8 +99,8 @@ class AnamorphosisGUI(ttk.Frame):
 
         def spinbox_update():
             pass
-        curItem = self.db_view.item(self.db_view.focus())['values']
-        if not curItem:
+        cur_item = self.db_view.item(self.db_view.focus())['values']
+        if not cur_item:
             return
 
         dlg = tk.Toplevel()
@@ -126,14 +126,14 @@ class AnamorphosisGUI(ttk.Frame):
         def cancel():
             dlg.destroy()
         
-        curItem = self.db_view.item(self.db_view.focus())['values']
-        if not curItem:
+        cur_item = self.db_view.item(self.db_view.focus())['values']
+        if not cur_item:
             return
         
         dlg = tk.Toplevel()
         dlg.title("Slet objekt")
 
-        ttk.Label(dlg, text='Er du sikker på, at du vil slette objektet "{}"?'.format(curItem[0])).grid(column =0, row = 0, columnspan = 2)
+        ttk.Label(dlg, text='Er du sikker på, at du vil slette objektet "{}"?'.format(cur_item[0])).grid(column =0, row = 0, columnspan = 2)
        
         ttk.Button(dlg, text="Slet", command=delete).grid(column=0,row=20)
         ttk.Button(dlg, text="Annuller", command=cancel).grid(column=1,row=20)
@@ -158,16 +158,16 @@ class AnamorphosisGUI(ttk.Frame):
         print("show 2d (Not implementet yet)")
 
     def rotate_clock(self): # pylint: disable=E0202
-        xAng = 0
-        yAng = 0
-        zAng = 0
+        x_ang = 0
+        y_ang = 0
+        z_ang = 0
         if self.data.axis == "x-akse":
-            xAng = -self.data.rotation_step
+            x_ang = -self.data.rotation_step
         elif self.data.axis == "y-akse":
-            yAng = -self.data.rotation_step
+            y_ang = -self.data.rotation_step
         elif self.data.axis == "z-akse":
-            zAng = -self.data.rotation_step
-        self.data.objects[self.data.selectedIdx].apply_rotation(xAng, yAng, zAng)
+            z_ang = -self.data.rotation_step
+        self.data.objects[self.data.selected_idx].apply_rotation(x_ang, y_ang, z_ang)
         self.reload_graph()
 
     def move_up(self): # pylint: disable=E0202
@@ -179,7 +179,7 @@ class AnamorphosisGUI(ttk.Frame):
         elif self.data.axis == "z-akse":
             d = Vector(0, 0, 1)
         
-        self.data.objects[self.data.selectedIdx].translate(d)
+        self.data.objects[self.data.selected_idx].translate(d)
         self.reload_graph()
 
     def move_down(self): # pylint: disable=E0202        
@@ -191,7 +191,7 @@ class AnamorphosisGUI(ttk.Frame):
         elif self.data.axis == "z-akse":
             d = Vector(0, 0, -1)
         
-        self.data.objects[self.data.selectedIdx].translate(d)
+        self.data.objects[self.data.selected_idx].translate(d)
         self.reload_graph()
 
     def toggle_visibility(self):
@@ -221,9 +221,9 @@ class AnamorphosisGUI(ttk.Frame):
         self.data.ax.azim = self.data.azim
         self.data.ax.elev = self.data.elev
         self.data.ax.dist = self.data.dist
-        self.data.ax.set_xlim([0, self.data.axesLim])
-        self.data.ax.set_ylim([0, self.data.axesLim])
-        self.data.ax.set_zlim([0, self.data.axesLim])
+        self.data.ax.set_xlim([0, self.data.axes_lim])
+        self.data.ax.set_ylim([0, self.data.axes_lim])
+        self.data.ax.set_zlim([0, self.data.axes_lim])
         
         if self.data.hud_visible:     
             self.data.ax.grid(True)            
@@ -231,16 +231,16 @@ class AnamorphosisGUI(ttk.Frame):
             self.data.ax.grid(False)           
 
     def rotate_counter(self): # pylint: disable=E0202
-        xAng = 0
-        yAng = 0
-        zAng = 0
+        x_ang = 0
+        y_ang = 0
+        z_ang = 0
         if self.data.axis == "x-akse":
-            xAng = self.data.rotation_step
+            x_ang = self.data.rotation_step
         elif self.data.axis == "y-akse":
-            yAng = self.data.rotation_step
+            y_ang = self.data.rotation_step
         elif self.data.axis == "z-akse":
-            zAng = self.data.rotation_step
-        self.data.objects[self.data.selectedIdx].apply_rotation(xAng, yAng, zAng)
+            z_ang = self.data.rotation_step
+        self.data.objects[self.data.selected_idx].apply_rotation(x_ang, y_ang, z_ang)
         self.reload_graph()
 
     def axis_change(self, val): # pylint: disable=E0202
@@ -257,7 +257,7 @@ class AnamorphosisGUI(ttk.Frame):
         # Titel.
         title_frame = tk.Frame(self)
         ttk.Label(title_frame, text="Anamorfose Tegner", background="white", font=("Arial Bold", 40)).grid(sticky='ew', column=0, row=0, columnspan=7)     
-        tk.Canvas(title_frame, width=screenWidth, height=0).grid(column=0, row=1, columnspan=7)
+        tk.Canvas(title_frame, width=screen_width, height=0).grid(column=0, row=1, columnspan=7)
 
         # Main.
         main_frame = tk.Frame(self)
@@ -266,7 +266,7 @@ class AnamorphosisGUI(ttk.Frame):
             tk.Canvas(main_frame, height=5, width=0).grid(column=20, row=colH+1)
 
         # Col 1 fra venstre.
-        tk.Canvas(main_frame, width=math.floor(screenWidth/3), height=0).grid(column=0, row=20, columnspan=2)
+        tk.Canvas(main_frame, width=math.floor(screen_width/3), height=0).grid(column=0, row=20, columnspan=2)
         ttk.Label(main_frame, text="Objekter", background="white").grid(sticky='ew', column=0, row=0, columnspan=2)
         
         s = ttk.Style()
@@ -285,13 +285,13 @@ class AnamorphosisGUI(ttk.Frame):
         xsb = ttk.Scrollbar(main_frame, command=self.db_view.xview, orient=tk.HORIZONTAL)
         self.db_view.configure(xscrollcommand=xsb.set)
 
-        self.db_view.column("column1", width=math.floor(screenWidth/6), minwidth=math.floor(screenWidth/10), stretch=tk.NO)
-        self.db_view.column("column2", width=math.floor(screenWidth/6/2), minwidth=math.floor(screenWidth/10), stretch=tk.NO)
-        self.db_view.column("column3", width=math.floor(screenWidth/6/2), minwidth=0, stretch=tk.YES)
+        self.db_view.column("column1", width=math.floor(screen_width/6), minwidth=math.floor(screen_width/10), stretch=tk.NO)
+        self.db_view.column("column2", width=math.floor(screen_width/6/2), minwidth=math.floor(screen_width/10), stretch=tk.NO)
+        self.db_view.column("column3", width=math.floor(screen_width/6/2), minwidth=0, stretch=tk.YES)
         self.db_view.grid(sticky='ew', column=0, row=1, columnspan=2, rowspan=100)
         
         # Col 2 fra venstre.
-        tk.Canvas(main_frame, width=math.floor(screenWidth/6), height=0).grid(column=2, row=20, columnspan=2)
+        tk.Canvas(main_frame, width=math.floor(screen_width/6), height=0).grid(column=2, row=20, columnspan=2)
         ttk.Label(main_frame, text="Funktioner", background="white").grid(sticky='ew', column=2, row=0, columnspan=2)
         
         # Funktionsknapper.
@@ -307,7 +307,7 @@ class AnamorphosisGUI(ttk.Frame):
         self.btn_show_2d = ttk.Button(main_frame, text="Vis 2D anamorfose", command=self.show_2D).grid(sticky='ew', column=2, row=8, columnspan=2)
 
         # Col 3 fra venstre.
-        tk.Canvas(main_frame, width=math.floor(screenWidth/2 - 20), height=0).grid(column=4, row=20, columnspan=3)        
+        tk.Canvas(main_frame, width=math.floor(screen_width/2 - 20), height=0).grid(column=4, row=20, columnspan=3)        
         ttk.Label(main_frame, text="Orientation", background="white").grid(sticky='ew', column=4, row=0, columnspan=3)
         
         self.btn_rotate_clock = ttk.Button(main_frame, text="Drej med uret", command=self.rotate_clock).grid(sticky='nsew', column=4, row=1, rowspan=24)
@@ -440,9 +440,9 @@ class AnamorphosisGUI(ttk.Frame):
 
 # Opsætning
 root = tk.Tk()
-screenWidth = 850
-screenHeight = 415
-root.geometry("{}x{}".format(screenWidth, screenHeight))
+screen_width = 850
+screen_height = 415
+root.geometry("{}x{}".format(screen_width, screen_height))
 root.resizable(True, True)
 
 app = AnamorphosisGUI(root)

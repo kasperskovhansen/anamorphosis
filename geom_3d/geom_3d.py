@@ -189,9 +189,9 @@ class Object():
         self.id = uuid.uuid4() 
         
         self.start_vec = start_vec
-        self.xAng = 0
-        self.yAng = 0
-        self.zAng = 0
+        self.x_ang = 0
+        self.y_ang = 0
+        self.z_ang = 0
         self.center_point = self.calc_center_point()
         self.visible = True
         self.anamorphosis_visible = True
@@ -252,10 +252,10 @@ class Object():
         vec.add(self.start_vec)
         return vec
 
-    def apply_rotation(self, xAng: (float, int), yAng: (float, int), zAng: (float, int)):
-        r_x = np.array([[1,0,0], [0,math.cos(xAng), math.sin(xAng)], [0, -math.sin(xAng), math.cos(xAng)]])
-        r_y = np.array([[math.cos(yAng),0,-math.sin(yAng)], [0, 1, 0], [math.sin(yAng), 0, math.cos(yAng)]])
-        r_z = np.array([[math.cos(zAng), math.sin(zAng),0], [-math.sin(zAng), math.cos(zAng), 0], [0, 0, 1]])
+    def apply_rotation(self, x_ang: (float, int), y_ang: (float, int), z_ang: (float, int)):
+        r_x = np.array([[1,0,0], [0,math.cos(x_ang), math.sin(x_ang)], [0, -math.sin(x_ang), math.cos(x_ang)]])
+        r_y = np.array([[math.cos(y_ang),0,-math.sin(y_ang)], [0, 1, 0], [math.sin(y_ang), 0, math.cos(y_ang)]])
+        r_z = np.array([[math.cos(z_ang), math.sin(z_ang),0], [-math.sin(z_ang), math.cos(z_ang), 0], [0, 0, 1]])
         
         for point in self.points:
             point.subtract(self.center_point)
