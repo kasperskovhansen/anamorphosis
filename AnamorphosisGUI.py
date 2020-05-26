@@ -28,7 +28,7 @@ class AnamorphosisGUI(ttk.Frame):
         self.data.add_object(Object.create_type("Observationspunkt", 1, Vector(9,-5,10), name="Observationspunkt", deleteable=True))
         self.data.add_object(Object.create_type("K", 1.5, Vector(5,1,1), name="{}. objekt".format(str(len(self.data.objects) +1))))
 
-        # Opsætning af graf.
+        # Opsætning af graf
         self.data.fig = plt.figure()
         self.data.ani = None
         self.data.axis = "x-akse"        
@@ -38,11 +38,20 @@ class AnamorphosisGUI(ttk.Frame):
         self.show_3D()
 
     def on_object_selected(self, event):
+        '''
+        Opdaterer det valgte id i datalaget
+        '''
         cur_item = self.db_view.item(self.db_view.focus())['values']
         self.data.set_selected_id(cur_item[2])
         
     def add_object(self):
+        '''
+        Viser dialog med mulighed for at tilføje et nyt objekt
+        '''
         def accept():
+            '''
+            Opretter det nye objekt
+            '''
             obj_type = self.type_var.get()
             obj_scale = scale.get()
             if obj_type == "Kasse":
@@ -64,7 +73,8 @@ class AnamorphosisGUI(ttk.Frame):
             dlg.destroy()
 
         def color(self):
-            color = colorchooser.askcolor()[1]
+            # Valg af farve virker ikke helt endnu
+            color = colorchooser.askcolor()[1]            
 
         dlg = tk.Toplevel()
         dlg.title("Tilføj objekt")
@@ -89,7 +99,13 @@ class AnamorphosisGUI(ttk.Frame):
         ttk.Button(dlg, text="Annuller", command=cancel).grid(column=1,row=20)
     
     def edit_object(self):
+        '''
+        Viser en dialog med mulighed for at redigere et valgt objekt
+        '''
         def save():
+            '''
+            Gemmer ændringerne til objektet
+            '''
             self.data.objects[self.data.get_selected_idx()].set_scale(scale.get())
             self.reload_graph()
             dlg.destroy()
@@ -97,8 +113,6 @@ class AnamorphosisGUI(ttk.Frame):
         def cancel():
             dlg.destroy()
 
-        def spinbox_update():
-            pass
         cur_item = self.db_view.item(self.db_view.focus())['values']
         if not cur_item:
             return
@@ -108,13 +122,16 @@ class AnamorphosisGUI(ttk.Frame):
 
         ttk.Label(dlg, text='Scale:').grid(column =0, row = 0)
         var = tk.DoubleVar(value=self.data.objects[self.data.get_selected_idx()].scale)
-        scale = tk.Spinbox(dlg, from_=0.1, to_=5, increment=0.1, textvariable=var, command=spinbox_update)
+        scale = tk.Spinbox(dlg, from_=0.1, to_=5, increment=0.1, textvariable=var)
         scale.grid(sticky='nsew',column=1, row=0)
 
         ttk.Button(dlg, text="Gem", command=save).grid(column=0,row=20)
         ttk.Button(dlg, text="Annuller", command=cancel).grid(column=1,row=20)
 
     def delete_object(self):
+        '''
+        Slet et valgt objekt
+        '''
         def delete():
             idx = self.data.get_selected_idx()
             if self.data.objects[idx].deleteable == True:
@@ -139,13 +156,16 @@ class AnamorphosisGUI(ttk.Frame):
         ttk.Button(dlg, text="Annuller", command=cancel).grid(column=1,row=20)
 
     def show_3D(self):
+        '''
+        Åbner et vindue med 3D-koordinatsystemet
+        '''
         dlg = tk.Toplevel()
         dlg.title("3D visning")
         dlg.geometry("{}x{}".format(600, 600))
 
         canvas = FigureCanvasTkAgg(self.data.fig, master=dlg)
         canvas.draw()
-        # Aksen skal opsættes efter canvas, når det axes3D er indlejret i tkinter.
+        # Aksen skal opsættes efter canvas, når det axes3D er indlejret i tkinter
         self.data.ax = Axes3D(self.data.fig)
         self.reset_view()
 
@@ -155,9 +175,16 @@ class AnamorphosisGUI(ttk.Frame):
         self.data.ani = animation.FuncAnimation(self.data.fig, self.update_3D_graph, interval=1)
 
     def show_2D(self):
-        print("show 2d (Not implementet yet)")
-
+        '''
+        Viser et 2D-koordinatsystem med elemementerne på en plan
+        '''
+        # Virker ikke endnu.
+        pass
+        
     def rotate_clock(self): # pylint: disable=E0202
+        '''
+        Roterer den valgte figur et step med uret
+        '''
         x_ang = 0
         y_ang = 0
         z_ang = 0
@@ -171,6 +198,9 @@ class AnamorphosisGUI(ttk.Frame):
         self.reload_graph()
 
     def move_up(self): # pylint: disable=E0202
+        '''
+        Flytter den valgte figur et step opad
+        '''
         d = None
         if self.data.axis == "x-akse":
             d = Vector(1, 0, 0)
@@ -182,7 +212,10 @@ class AnamorphosisGUI(ttk.Frame):
         self.data.objects[self.data.selected_idx].translate(d)
         self.reload_graph()
 
-    def move_down(self): # pylint: disable=E0202        
+    def move_down(self): # pylint: disable=E0202      
+        '''
+        Flytter den valgte figur et step opad
+        '''  
         d = None
         if self.data.axis == "x-akse":
             d = Vector(-1, 0, 0)
@@ -195,6 +228,9 @@ class AnamorphosisGUI(ttk.Frame):
         self.reload_graph()
 
     def toggle_visibility(self):
+        '''
+        Slår synligheden af det valgte objekt til eller fra
+        '''
         idx = self.data.get_selected_idx()
         if self.data.objects[idx].visible == True:
             self.data.objects[idx].visible == False
@@ -204,6 +240,9 @@ class AnamorphosisGUI(ttk.Frame):
         self.reload_graph()
 
     def toggle_anamorphosis(self):
+        '''
+        Slår synligheden af anamorfosetegningen dannet af det valgte objekt til eller fra
+        '''
         idx = self.data.get_selected_idx()
         if self.data.objects[idx].anamorphosis_visible == True:
             self.data.objects[idx].anamorphosis_visible == False
@@ -213,11 +252,17 @@ class AnamorphosisGUI(ttk.Frame):
         self.reload_graph()
 
     def toggle_hud(self):
+        '''
+        Slår synligheden af gitterlinjer i koordinatsystemet til eller fra
+        '''
         self.data.hud_visible = False if self.data.hud_visible else True
         print(self.data.hud_visible) 
         self.reload_graph()       
             
     def reset_view(self):
+        '''
+        Indstiller koordinatsystemet til de gemte parametre
+        '''
         self.data.ax.azim = self.data.azim
         self.data.ax.elev = self.data.elev
         self.data.ax.dist = self.data.dist
@@ -231,6 +276,9 @@ class AnamorphosisGUI(ttk.Frame):
             self.data.ax.grid(False)           
 
     def rotate_counter(self): # pylint: disable=E0202
+        '''
+        Roterer den valgte figur et step mod uret
+        '''
         x_ang = 0
         y_ang = 0
         z_ang = 0
@@ -244,9 +292,15 @@ class AnamorphosisGUI(ttk.Frame):
         self.reload_graph()
 
     def axis_change(self, val): # pylint: disable=E0202
+        '''
+        Skifter den valgte akse
+        '''
         self.data.axis = val
 
     def reload_table(self):
+        '''
+        Genindlæser tabellen med objekter
+        '''
         self.db_view.delete(*self.db_view.get_children())
         if len(self.data.objects) == 0:
             return
@@ -254,6 +308,9 @@ class AnamorphosisGUI(ttk.Frame):
             self.db_view.insert("", tk.END, values=(obj.name, obj.obj_type, obj.id))
 
     def build_GUI(self):
+        '''
+        Bygger den grafiske brugerflade
+        '''
         # Titel.
         title_frame = tk.Frame(self)
         ttk.Label(title_frame, text="Anamorfose Tegner", background="white", font=("Arial Bold", 40)).grid(sticky='ew', column=0, row=0, columnspan=7)     
@@ -325,10 +382,16 @@ class AnamorphosisGUI(ttk.Frame):
         self.pack()
 
     def reload_graph(self):
+        '''
+        Genindlæser koordinatsystemet med de seneste ændringer til objekterne
+        '''
         if self.data.ani:
             self.data.ani.event_source.start()
 
     def update_3D_graph(self, i=0):
+        '''
+        Indlæser alle objekter i koordinatsystemet fra datalaget
+        '''
         # Gem, reload og indlæs indstillingerne for visningen.
         self.data.azim = self.data.ax.azim
         self.data.elev = self.data.ax.elev
@@ -397,7 +460,9 @@ class AnamorphosisGUI(ttk.Frame):
                 viewPoints = self.data.get_objs_of_type("Observationspunkt")
                 for viewPoint in viewPoints:
                     for plane in planes:
-                        lines = self.get_lines(Vector.from_point(viewPoint.points[0]), figPoints)
+                        lines = []
+                        for point in figPoints:
+                            lines.append(Line.create_two_points(point, viewPoint.points[0]))                        
                         # Liste over punkter projiceret på planen.
                         for line in lines:
                             intersectionPoint = plane_line_intersection(plane.mathPlane, line)
@@ -419,6 +484,9 @@ class AnamorphosisGUI(ttk.Frame):
         self.data.ani.event_source.stop()
 
     def draw_in_system(self, obj, obj_type: str, color="black", alpha=1, lineTMin=-5, lineTMax=5, linewidth=2) -> bool:
+        '''
+        Tegner et objekt af en given type i koordinatsystemet
+        '''
         if not obj: return False
         if obj_type == "Point":            
             self.data.ax.scatter(obj.x, obj.y, obj.z, color=color, alpha=alpha, linewidth=linewidth)
@@ -430,13 +498,7 @@ class AnamorphosisGUI(ttk.Frame):
             self.data.ax.plot([p1.x, p2.x], [p1.y, p2.y], [p1.z, p2.z], color=color, alpha=alpha, linewidth=linewidth)
         elif obj_type == "Vector":
             self.data.ax.plot([0, obj.x], [0, obj.y], [0, obj.z], color=color, alpha=alpha, linewidth=linewidth)
-        return True
-
-    def get_lines(self, viewPoint: Point, figPoints: list):
-        lineList = []
-        for point in figPoints:
-            lineList.append(Line.create_two_points(point, viewPoint))
-        return lineList
+        return True    
 
 # Opsætning
 root = tk.Tk()

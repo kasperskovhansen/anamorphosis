@@ -11,6 +11,9 @@ class Point():
         self.alpha = alpha
 
     def coords(self) -> list:
+        '''
+        Returnerer koordinatsættet som en liste
+        '''
         return [self.x, self.y, self.z]        
 
     def __str__(self):
@@ -38,11 +41,17 @@ class Vector(Point):
         return cls(p.x, p.y, p.z)
 
     def add(self, v1) -> None:
+        '''
+        Læg en anden vektor til denne
+        '''
         self.x += v1.x
         self.y += v1.y
         self.z += v1.z
 
-    def subtract(self, v1) -> None:        
+    def subtract(self, v1) -> None:       
+        '''
+        Træk en anden vektor fra denne
+        ''' 
         self.x -= v1.x
         self.y -= v1.y
         self.z -= v1.z
@@ -81,7 +90,7 @@ class Line():
         Lav en ny linje ud fra to punkter på linjen
         '''
         d = Vector.connect(p1, p2)
-        p0 = Vector(p1.x, p1.y, p1.z) # Skulle det ikke have været: p0 = p1
+        p0 = Vector(p1.x, p1.y, p1.z) # Skulle det ikke have været: p0 = p1 ?
         return cls(p0, d)
 
     def point(self, t: (float,int) = 0) -> Point:
@@ -176,6 +185,9 @@ class Plane():
     
     @classmethod
     def create_from_three_points(cls, p1: Point, p2: Point, p3: Point):
+        '''
+        Returnerer en plan ud fra tre punkter
+        '''
         d1 = Vector.connect(p1, p2)
         d2 = Vector.connect(p1, p3)
         return cls(p3, d1, d2)
@@ -201,6 +213,9 @@ class Object():
         self.mathPlane = mathPlane        
     @classmethod
     def create_type(cls, obj_type: str, scale: float, v0: Vector, name: str = "", deleteable: bool = True):
+        '''
+        Returnerer et objekt af en given type
+        '''
         if obj_type == "Kasse":            
             fp_segments = build_fp_segments(v0, scale, obj_type)
             return cls(fp_segments[0], segments=fp_segments[1], obj_type=obj_type, name = name, scale=scale, start_vec=v0)
@@ -233,6 +248,9 @@ class Object():
             pass
     
     def calc_center_point(self):
+        '''
+        Returnerer figurens centrum
+        '''
         if len(self.points) == 1:
             return self.points[0]
         
@@ -253,6 +271,9 @@ class Object():
         return vec
 
     def apply_rotation(self, x_ang: (float, int), y_ang: (float, int), z_ang: (float, int)):
+        '''
+        Multiplicerer alle objektets punkter med en rotationsmatrix og roterer dermed figuren
+        '''
         r_x = np.array([[1,0,0], [0,math.cos(x_ang), math.sin(x_ang)], [0, -math.sin(x_ang), math.cos(x_ang)]])
         r_y = np.array([[math.cos(y_ang),0,-math.sin(y_ang)], [0, 1, 0], [math.sin(y_ang), 0, math.cos(y_ang)]])
         r_z = np.array([[math.cos(z_ang), math.sin(z_ang),0], [-math.sin(z_ang), math.cos(z_ang), 0], [0, 0, 1]])
@@ -273,9 +294,10 @@ class Object():
             self.mathPlane = Plane.create_from_three_points(self.points[0], self.points[1], self.points[2])
 
     def set_scale(self, scale: (float, int)):
-        old_center = self.center_point
-        # for point in self.points:
-        #     point.subtract(self.points[0])
+        '''
+        Ændrer figurens skalering
+        '''
+        old_center = self.center_point        
         self.scale = scale
         fp_segments = build_fp_segments(self.start_vec, self.scale, self.obj_type)
         self.points = fp_segments[0]
@@ -300,6 +322,9 @@ class Object():
         self.center_point.add(d)    
 
 def build_fp_segments(v0, scale, obj_type):
+    '''
+    Returnerer lister med punkter og med segmenter for et objekt af en given type
+    '''
     scale = float(scale)
     mathPlane = None
 
@@ -329,7 +354,9 @@ def build_fp_segments(v0, scale, obj_type):
     return [fp, segments, mathPlane]
 
 def line_line_intersection(l1: Line, l2: Line):
-    
+    '''
+    Returnerer skæringen mellem to linjer som et punkt
+    '''
     x_null = False
     y_null = False
     z_null = False
@@ -382,7 +409,7 @@ def line_line_intersection(l1: Line, l2: Line):
     
 def line_line_intersection_calc(l1: Line, l2: Line, solve_for="all"):
     '''
-    Skæringspunkt mellem to linjer i rummet.
+    Finder skæringspunktet mellem to linjer i rummet
     '''
     if solve_for == "z" or solve_for == "all":
         if not plus_minus(l2.d.y * l1.d.x - l2.d.x * l1.d.y, 0) and not plus_minus(l1.d.x, 0):
@@ -409,7 +436,10 @@ def line_line_intersection_calc(l1: Line, l2: Line, solve_for="all"):
     return None
 
 
-def is_within_segments(p0: Point, d: Vector, segments: [Segment]):
+def is_within_segments(p0: Point, d: Vector, segments: [Segment]) -> bool:
+    '''
+    Finder ud af om et punkt er placeret inden for et polygon
+    '''
     l = Line(p0, d)
    
     crossings = 0
@@ -426,6 +456,9 @@ def is_within_segments(p0: Point, d: Vector, segments: [Segment]):
     return within
 
 def segment_segments_intersection(seg_1, segments: [Segment]):
+    '''
+    Finder en eventuel skæring mellem to segmenter
+    '''
     line_segs = []
     inters = []
     line_seg_1 = Line.create_two_points(seg_1.v1, seg_1.v2)
@@ -440,13 +473,16 @@ def segment_segments_intersection(seg_1, segments: [Segment]):
     return [line_segs, None, inters]
     
 def on_line_between_points(p_mid: Point, p_min: Point, p_max: Point):
+    '''
+    Finder ud af om et punkt ligger på linjen mellem to punkter
+    '''
     if plus_minus(distance(p_mid, p_min) + distance(p_mid, p_max), distance(p_min, p_max)):    
         return True
     return False
 
 def plane_line_intersection(pl: Plane, l: Line):
     '''
-    Skæringspunkt mellem plan og linje.
+    Skæringspunkt mellem plan og linje
     '''
     # Normalvektoren til planen pl.
     plan_n = cross(pl.d1, pl.d2)
@@ -491,6 +527,9 @@ def add(v1: Vector, v2: Vector) -> Vector:
     return Vector(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z)
 
 def plus_minus(x, y):
+    '''
+    Laver en sammenligning mellem to tal med en lille margin til afrundinger
+    '''
     margin = 0.0000001
     if x >= y - margin and x <= y + margin:
         return True
@@ -498,7 +537,7 @@ def plus_minus(x, y):
 
 def subtract(v1: Vector, v2: Vector) -> Vector:
     '''
-    Læg to vektorer sammen og returner resultatet
+    Trækker to vektorer fra hinanden og returnerer resultatet
     '''
     return Vector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z)
 
@@ -509,29 +548,27 @@ def dot(v1: Vector, v2: Vector) -> float:
     return v1.x * v2.x + v1.y * v2.y
 
 def cross(v1: Vector, v2: Vector) -> Vector:
+    '''
+    Returnerer krydsproduktet mellem to vektorer
+    '''
     x = v1.y * v2.z - v1.z * v2.y
     y = v1.z * v2.x - v1.x * v2.z
     z = v1.x * v2.y - v1.y * v2.x
     return Vector(x, y, z)
 
 def angle(v1: Vector, v2: Vector):
+    '''
+    Returnerer vinklen mellem to vektorer
+    '''
     if v1.length() > 0.000001 and v2.length() > 0.000001:
         return math.acos(dot(v1,v2)/(v1.length() * v2.length()))
     return None
 
-def perpendicular(v1: Vector, v2: Vector) -> bool:
-    # ternary operator
-    return True if dot(v1, v2) == 0 else False
-
-def projection(v1: Vector, v2: Vector) -> Vector:
-    return (dot(v1, v2)/v2.length()**2)*v2
-
 def distance(p1: Point, p2: Point):
-    # Afstand mellem to punkter
+    '''
+    Returnerer afstanden mellem to punkter
+    '''
     return Vector.connect(p1, p2).length()
-
-def distancePointLine(P: Point, l: Line):
-    return cross(l.d, Vector.connect(l.p0, P)).length() / l.d.length()
 
 if __name__ == "__main__":
     #Her testes biblioteket, hvis det køres som main-program.
