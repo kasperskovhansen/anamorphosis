@@ -165,7 +165,7 @@ class AnamorphosisGUI(ttk.Frame):
 
         canvas = FigureCanvasTkAgg(self.data.fig, master=dlg)
         canvas.draw()
-        # Aksen skal opsættes efter canvas, når det axes3D er indlejret i tkinter
+        # Aksen skal opsættes efter canvas, når axes3D er indlejret i tkinter
         self.data.ax = Axes3D(self.data.fig)
         self.reset_view()
 

@@ -4,7 +4,7 @@ class DataAnamorphosis:
         self.figures = []
         self.selected_id = None
         self.selected_idx = 0
-
+        
         self.fig = None
         self.ani = None
         self.axis = "x-akse"
